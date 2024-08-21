@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>GlitchGen Web Generator</title>
+        <link rel="stylesheet" href="./css/styles.css">
+        <link rel="stylesheet" href="./css/styles_builder.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/emoji-mart@latest/css/emoji-mart.css" />
+        <link href="https://fonts.googleapis.com/css2?family=Roboto&family=Open+Sans&family=Lato&family=Montserrat&family=Playfair+Display&family=Merriweather&family=Nunito&family=Raleway&family=Poppins&family=Ubuntu&display=swap" rel="stylesheet">
+        <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png">
+        <meta name="msapplication-TileColor" content="#da532c">
+        <meta name="theme-color" content="#ffffff">
+    </head>
+    <body
+        class="bg-app-bg min-h-screen p-[1.5vh] flex">
+        <!-- Sidebar -->
+        <div class="w-72 bg-white shadow-lg rounded-lg mr-6 flex flex-col h-[97vh] text-gray-800">
+            <div class="py-4 px-3 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-center flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-6 h-6 mr-2">
+                        <defs>
+                            <pattern id="pixelPattern" width="2" height="2" patternUnits="userSpaceOnUse">
+                                <rect width="1" height="1" fill="#000" fill-opacity="0.1" />
+                                <rect width="1" height="1" x="1" y="1" fill="#000" fill-opacity="0.1" />
+                            </pattern>
+                        </defs>
+
+                        <!-- Computer case -->
+                        <rect x="2" y="2" width="20" height="16" fill="#808080" />
+                        <rect x="3" y="3" width="18" height="14" fill="#C0C0C0" />
+
+                        <!-- Animated Screen -->
+                        <rect x="4" y="4" width="16" height="10" fill="#000080">
+                            <animate
+                                attributeName="fill"
+                                values="#000080; #008000; #800080; #008080; #000080"
+                                dur="10s"
+                                repeatCount="indefinite" />
+                        </rect>
+                        <rect x="5" y="5" width="14" height="8" fill="#00FF00">
+                            <animate
+                                attributeName="fill"
+                                values="#00FF00; #FF00FF; #FFFF00; #00FFFF; #00FF00"
+                                dur="10s"
+                                repeatCount="indefinite" />
+                        </rect>
+                        <rect x="5" y="5" width="14" height="8" fill="url(#pixelPattern)" />
+
+                        <!-- Browser elements -->
+                        <rect x="5" y="5" width="14" height="2" fill="#C0C0C0" />
+                        <rect x="6" y="6" width="2" height="1" fill="#808080" />
+                        <rect x="9" y="6" width="2" height="1" fill="#808080" />
+                        <rect x="12" y="6" width="2" height="1" fill="#808080" />
+
+                        <!-- Computer stand -->
+                        <rect x="8" y="18" width="8" height="2" fill="#808080" />
+                        <rect x="7" y="20" width="10" height="2" fill="#808080" />
+                    </svg>
+                    GlitchGen
+                    <span id="versionNumber" class="text-xs text-gray-500 ml-2 mt-1"></span>
+                </h2>
+            </div>
+            <div class="flex-grow overflow-y-auto p-3">
+                <div class="mb-6">
+                    <h3 class="font-medium mb-3 text-base text-gray-800">The Basics</h3>
+                    <ul class="space-y-2">
+                        <li class="bg-gray-100 p-2 rounded shadow cursor-pointer hover:bg-gray-200 transition-colors flex items-center text-sm" id="newWebsite">
+                            <i class="fas fa-file w-4 h-4 mr-2"></i>
+                            New Website
+                        </li>
+                        <li class="bg-gray-100 p-2 rounded shadow cursor-pointer hover:bg-gray-200 transition-colors flex items-center text-sm" id="saveWeb">
+                            <i class="fas fa-download w-4 h-4 mr-2"></i>
+                            Save Website
+                        </li>
+                        <li class="bg-gray-100 p-2 rounded shadow cursor-pointer hover:bg-gray-200 transition-colors flex items-center text-sm" id="loadWeb">
+                            <i class="fas fa-upload w-4 h-4 mr-2"></i>
+                            Load Website
+                        </li>
+                        <li class="bg-gray-100 p-2 rounded shadow cursor-pointer hover:bg-gray-200 transition-colors flex items-center text-sm" id="exportWeb">
+                            <i class="fas fa-file-export w-4 h-4 mr-2"></i>
+                            Export Website
+                        </li>
+
+                    </ul>
+                </div>
+                <div class="flex items-center my-6">
+                    <div class="flex-grow h-px bg-gradient-to-r from-gray-300 via-gray-400 to-gray-300"></div>
+                    <div class="flex-shrink-0 mx-3 flex items-center space-x-1">
+                        <div class="w-1 h-3 bg-blue-400"></div>
+                        <div class="w-1 h-4 bg-green-400"></div>
+                        <div class="w-1 h-5 bg-yellow-400"></div>
+                        <div class="w-1 h-4 bg-red-400"></div>
+                        <div class="w-1 h-3 bg-purple-400"></div>
+                    </div>
+                    <div class="flex-grow h-px bg-gradient-to-r from-gray-300 via-gray-400 to-gray-300"></div>
+                </div>
+                <div>
+                    <div class="space-y-4">
+                        <div>
+                            <h4 class="text-sm font-medium mb-2 text-gray-700">Text Elements</h4>
+                            <ul id="textElements" class="space-y-1"></ul>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-medium mb-2 text-gray-700">Media Elements</h4>
+                            <ul id="mediaElements" class="space-y-1"></ul>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-medium mb-2 text-gray-700">Interactive Elements</h4>
+                            <ul id="interactiveElements" class="space-y-1"></ul>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-medium mb-2 text-gray-700">Layout Elements</h4>
+                            <ul id="layoutElements" class="space-y-1"></ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Main Content -->
+        <div class="bg-card-bg shadow-xl rounded-lg flex-grow h-[97vh] flex flex-col overflow-hidden">
+            <div class="bg-header-bg border-b border-border p-4 flex items-center justify-between rounded-t-lg">
+                <div class="w-24"></div>
+                <!-- Spacer -->
+                <h1 class="text-xl font-semibold cursor-pointer hover:text-indigo-600 transition-colors flex items-center">
+                    <span id="webTitle">Your Website</span>
+                    <span id="openAppConfig" class="ml-2">
+                        <i class="fas fa-cog h-5 w-5 cursor-pointer"></i>
+                    </span>
+                </h1>
+                <div class="flex space-x-2">
+                    <button id="bgConfigButton" class="p-1 rounded-full hover:bg-gray-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </button>
+                    <button class="text-gray-600 hover:text-gray-800">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewbox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                        </svg>
+                    </button>
+                    <button class="text-gray-600 hover:text-gray-800">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewbox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="flex-grow p-6 overflow-auto relative select-none" id="drop-zone">
+                <div id="placeholder" class="absolute inset-0 flex items-center justify-center bg-white overflow-hidden">
+                    <div class="text-center relative w-full max-w-2xl px-4">
+                        <!-- Animated background elements -->
+                        <div class="absolute inset-0 opacity-10">
+                            <div class="absolute top-0 left-0 w-20 h-20 bg-gray-300 rounded-full animate-float"></div>
+                            <div class="absolute top-1/4 right-1/4 w-16 h-16 bg-gray-400 animate-spin-slow"></div>
+                            <div class="absolute bottom-1/3 left-1/3 w-24 h-24 bg-gray-200 rotate-45 animate-pulse"></div>
+                        </div>
+
+                        <!-- Main content -->
+                        <div class="relative z-10">
+
+                            <!-- Placeholder elements grid -->
+                            <div class="grid grid-cols-3 gap-4 mb-8">
+                                <div class="bg-gray-200 h-20 rounded shadow-inner flex items-center justify-center">
+                                    <div class="w-8 h-8 bg-gray-300 rounded-full animate-pulse"></div>
+                                </div>
+                                <div class="bg-gray-200 h-20 rounded shadow-inner flex items-center justify-center">
+                                    <div class="w-12 h-4 bg-gray-300 rounded animate-pulse"></div>
+                                </div>
+                                <div class="bg-gray-200 h-20 rounded shadow-inner flex items-center justify-center">
+                                    <div class="w-8 h-8 bg-gray-300 rotate-45 animate-spin-slow"></div>
+                                </div>
+                            </div>
+
+                            <!-- Nostalgic message -->
+                            <div class="mb-8">
+                                <p class="text-gray-600 mb-2">Drag and drop elements here to start building your rad website!</p>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="bg-gray-100 py-2 px-4 shadow-md glitchgen-footer mt-auto">
+                <div class="container mx-auto flex items-center justify-center text-sm">
+                    <span class="mr-2 text-blue-600">Created with ❤️ on</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mr-2" viewbox="0 0 24 24">
+                        <defs>
+                            <pattern id="pixelPattern" width="2" height="2" patternUnits="userSpaceOnUse">
+                                <rect width="1" height="1" fill="#000" fill-opacity="0.1"></rect>
+                                <rect width="1" height="1" x="1" y="1" fill="#000" fill-opacity="0.1"></rect>
+                            </pattern>
+                        </defs>
+                        <rect x="2" y="2" width="20" height="16" fill="#808080"></rect>
+                        <rect x="3" y="3" width="18" height="14" fill="#C0C0C0"></rect>
+                        <rect x="4" y="4" width="16" height="10" fill="#000080">
+                            <animate attributename="fill" values="#000080; #008000; #800080; #008080; #000080" dur="10s" repeatcount="indefinite"></animate>
+                        </rect>
+                        <rect x="5" y="5" width="14" height="8" fill="#00FF00">
+                            <animate attributename="fill" values="#00FF00; #FF00FF; #FFFF00; #00FFFF; #00FF00" dur="10s" repeatcount="indefinite"></animate>
+                        </rect>
+                        <rect x="5" y="5" width="14" height="8" fill="url(#pixelPattern)"></rect>
+                        <rect x="5" y="5" width="14" height="2" fill="#C0C0C0"></rect>
+                        <rect x="6" y="6" width="2" height="1" fill="#808080"></rect>
+                        <rect x="9" y="6" width="2" height="1" fill="#808080"></rect>
+                        <rect x="12" y="6" width="2" height="1" fill="#808080"></rect>
+                        <rect x="8" y="18" width="8" height="2" fill="#808080"></rect>
+                        <rect x="7" y="20" width="10" height="2" fill="#808080"></rect>
+                    </svg>
+                    <a href="https://glitchgen.ai" class="text-blue-600 hover:text-blue-800 transition-colors duration-200">GlitchGen</a>
+                </div>
+            </footer>
+        </div>
+        <!-- Element Elimination Modal -->
+        <div id="confirmModal" class="modal-window-top fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden flex items-center justify-center">
+            <div class="relative p-5 border w-4/12 shadow-lg rounded-lg bg-white modal-content">
+                <div class="mt-3">
+                    <div class="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full">
+                        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="mt-5 text-lg leading-6 font-medium text-gray-900 text-center">Remove Element</h3>
+                    <div class="mt-2 px-7 py-3">
+                        <p class="text-sm text-gray-500 text-center">
+                            Are you sure you want to remove this element? This action cannot be undone.
+                        </p>
+                    </div>
+                    <div class="flex justify-center mt-5">
+                        <button id="confirmRemove" class="px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md w-24 mr-2 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300">
+                            Remove
+                        </button>
+                        <button id="cancelRemove" class="px-4 py-2 bg-gray-200 text-gray-800 text-base font-medium rounded-md w-24 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- App Configuration Modal -->
+        <div id="configModal" class="modal-window fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden flex items-center justify-center">
+            <div class="relative p-5 border w-4/12 shadow-lg rounded-lg bg-white modal-content">
+                <h2 class="text-2xl font-bold mb-6 text-gray-800">Web Configuration</h2>
+                <form id="configForm">
+                    <div class="space-y-6">
+                        <div>
+                            <label for="webTitleInput" class="block text-sm font-medium text-gray-700">App Title</label>
+                            <input type="text" id="webTitleInput" name="webTitle" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="gridSizeInput" class="block text-sm font-medium text-gray-700">Grid Size (px)</label>
+                            <input type="range" id="gridSizeInput" name="gridSize" min="5" max="50" value="20" class="mt-1 block w-full">
+                            <span id="gridSizeValue" class="text-sm text-gray-500">20px</span>
+                        </div>
+                        <div>
+                            <label for="fontSelect" class="block text-sm font-medium text-gray-700">Font</label>
+                            <select id="fontSelect" name="font" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                                <option value="Roboto" class="font-roboto">Roboto</option>
+                                <option value="Open Sans" class="font-opensans">Open Sans</option>
+                                <option value="Lato" class="font-lato">Lato</option>
+                                <option value="Montserrat" class="font-montserrat">Montserrat</option>
+                                <option value="Playfair Display" class="font-playfair">Playfair Display</option>
+                                <option value="Merriweather" class="font-merriweather">Merriweather</option>
+                                <option value="Nunito" class="font-nunito">Nunito</option>
+                                <option value="Raleway" class="font-raleway">Raleway</option>
+                                <option value="Poppins" class="font-poppins">Poppins</option>
+                                <option value="Ubuntu" class="font-ubuntu">Ubuntu</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="textColorInput" class="block text-sm font-medium text-gray-700">Text Color</label>
+                            <input type="color" id="textColorInput" name="textColor" class="mt-1 block w-full h-10 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                    </div>
+                    <div class="mt-8 flex justify-end">
+                        <button type="button" id="cancelConfig" class="px-4 py-2 bg-white text-gray-700 text-base font-medium rounded-md border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm mr-3">
+                            Cancel
+                        </button>
+                        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white text-base font-medium rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm">
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- Load Website Modal -->
+        <div id="loadModal" class="modal-window fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden flex items-center justify-center">
+            <div class="relative p-5 border w-4/12 shadow-lg rounded-lg bg-white modal-content">
+                <h2 class="text-2xl font-bold mb-6 text-gray-800">Load Website</h2>
+                <p class="text-sm text-gray-500 mb-4">Warning: Loading a new app will replace your current work. Make sure to save your current app if needed.</p>
+                <div class="border-dashed border-2 border-gray-300 p-6 rounded-lg text-center" id="loadWebDropZone">
+                    <p>Drag and drop a .glitchgen file here</p>
+                    <p class="text-sm text-gray-500 mt-2">or</p>
+                    <label for="fileInput" class="mt-2 cursor-pointer inline-block bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">
+                        Choose File
+                    </label>
+                    <input type="file" id="fileInput" accept=".glitchgen" class="hidden">
+                </div>
+                <div class="mt-8 flex justify-end">
+                    <button type="button" id="cancelLoad" class="px-4 py-2 bg-white text-gray-700 text-base font-medium rounded-md border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:text-sm">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="loadingOverlay" class="modal-window fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden">
+            <div class="bg-white p-6 rounded-lg shadow-xl text-center">
+                <h3 class="text-xl font-semibold mb-4">Loading Web</h3>
+                <div class="w-64 h-4 bg-gray-200 rounded-full overflow-hidden">
+                    <div id="loadingProgressBar" class="h-full bg-indigo-600 transition-all duration-100 ease-out" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+        <div id="elementConfigModal" class="modal-window fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden flex items-center justify-center">
+            <div class="relative p-5 border w-4/12 shadow-lg rounded-lg bg-white modal-content">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-2xl font-bold text-gray-800 mr-2">Element Configuration <span class="elementidname text-sm text-gray-500"></span></h2>
+                    <i id="removeElement" class="fas fa-trash-alt text-red-500 cursor-pointer hover:text-red-700 transition-colors duration-200 text-xl mt-1 mr-2"></i>
+                </div>
+
+                <form id="elementConfigForm">
+                    <div id="configOptions" class="space-y-4">
+                    </div>
+
+                    <div class="mt-8 flex justify-between">
+                        <div>
+                            <button type="button" id="cancelElementConfig" class="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition-colors duration-200">Cancel</button>
+                            <button type="submit" id="saveElementConfig" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200 ml-2">Save Changes</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div id="bgConfigModal" class="modal-window fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden flex items-center justify-center">
+            <div class="relative p-5 border w-8/12 shadow-lg rounded-lg bg-white modal-content">
+                <h2 class="text-2xl font-bold mb-6 text-gray-800">Choose a Background</h2>
+                <div id="bgOptions" class="grid grid-cols-4 gap-4">
+                    <!-- Background options will be dynamically added here -->
+                </div>
+                <div class="mt-8 flex justify-end">
+                    <button id="cancelBgConfig" class="mr-2 px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300">Cancel</button>
+                </div>
+            </div>
+        </div>
+        <div id="newWebsiteModal" class="modal-window fixed inset-0 bg-gray-900 bg-opacity-50 overflow-y-auto h-full w-full hidden flex items-center justify-center">
+            <div class="relative p-6 w-11/12 max-w-4xl bg-white rounded-lg shadow-2xl modal-content">
+              <h2 class="text-3xl font-bold mb-2 text-gray-800 text-center">Let's build a new website!</h2>
+              <p class="text-xl text-gray-600 mb-6 text-center">Choose a template or start fresh</p>
+              
+              <div class="grid grid-cols-3 gap-6" id="templateGrid">
+                <!-- Blank Template -->
+                <div class="cursor-pointer group" onclick="createNewWebsite('blank')">
+                  <div class="relative overflow-hidden rounded-lg border-2 border-gray-200 transition-all duration-300 ease-in-out group-hover:border-indigo-500 group-hover:shadow-lg">
+                    <div class="bg-gray-100 h-36 flex items-center justify-center">
+                      <span class="text-5xl text-gray-300 group-hover:text-indigo-500 transition-colors duration-300">+</span>
+                    </div>
+                    <div class="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+                    <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <span class="bg-white px-3 py-1 rounded-full text-xs font-semibold text-indigo-600">Start Fresh</span>
+                    </div>
+                  </div>
+                  <p class="mt-2 text-center font-medium text-gray-600 text-sm">Blank Template</p>
+                </div>
+                
+                <!-- Anime Template -->
+                <div class="cursor-pointer group" onclick="createNewWebsite('Anime')">
+                  <div class="relative overflow-hidden rounded-lg border-2 border-gray-200 transition-all duration-300 ease-in-out group-hover:border-indigo-500 group-hover:shadow-lg">
+                    <img src="./templates/Anime.jpg" alt="Anime" class="h-36 w-full object-cover filter grayscale group-hover:filter-none transition-all duration-300">
+                    <div class="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+                    <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <span class="bg-white px-3 py-1 rounded-full text-xs font-semibold text-indigo-600">Select Template</span>
+                    </div>
+                  </div>
+                  <p class="mt-2 text-center font-medium text-gray-600 text-sm">Anime</p>
+                </div>
+          
+                <!-- Area 51 Template -->
+                <div class="cursor-pointer group" onclick="createNewWebsite('Area 51')">
+                  <div class="relative overflow-hidden rounded-lg border-2 border-gray-200 transition-all duration-300 ease-in-out group-hover:border-indigo-500 group-hover:shadow-lg">
+                    <img src="./templates/Area 51.jpg" alt="Area 51" class="h-36 w-full object-cover filter grayscale group-hover:filter-none transition-all duration-300">
+                    <div class="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+                    <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <span class="bg-white px-3 py-1 rounded-full text-xs font-semibold text-indigo-600">Select Template</span>
+                    </div>
+                  </div>
+                  <p class="mt-2 text-center font-medium text-gray-600 text-sm">Area 51</p>
+                </div>
+          
+                <!-- Pet Lovers Template -->
+                <div class="cursor-pointer group" onclick="createNewWebsite('Pet Lovers')">
+                  <div class="relative overflow-hidden rounded-lg border-2 border-gray-200 transition-all duration-300 ease-in-out group-hover:border-indigo-500 group-hover:shadow-lg">
+                    <img src="./templates/Pet Lovers.jpg" alt="Pet Lovers" class="h-36 w-full object-cover filter grayscale group-hover:filter-none transition-all duration-300">
+                    <div class="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+                    <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <span class="bg-white px-3 py-1 rounded-full text-xs font-semibold text-indigo-600">Select Template</span>
+                    </div>
+                  </div>
+                  <p class="mt-2 text-center font-medium text-gray-600 text-sm">Pet Lovers</p>
+                </div>
+          
+                <!-- Hollywood Template -->
+                <div class="cursor-pointer group" onclick="createNewWebsite('Hollywood')">
+                  <div class="relative overflow-hidden rounded-lg border-2 border-gray-200 transition-all duration-300 ease-in-out group-hover:border-indigo-500 group-hover:shadow-lg">
+                    <img src="./templates/Hollywood.jpg" alt="Hollywood" class="h-36 w-full object-cover filter grayscale group-hover:filter-none transition-all duration-300">
+                    <div class="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+                    <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <span class="bg-white px-3 py-1 rounded-full text-xs font-semibold text-indigo-600">Select Template</span>
+                    </div>
+                  </div>
+                  <p class="mt-2 text-center font-medium text-gray-600 text-sm">Hollywood</p>
+                </div>
+          
+                <!-- Enchanted Forest Template -->
+                <div class="cursor-pointer group" onclick="createNewWebsite('Enchanted Forest')">
+                  <div class="relative overflow-hidden rounded-lg border-2 border-gray-200 transition-all duration-300 ease-in-out group-hover:border-indigo-500 group-hover:shadow-lg">
+                    <img src="./templates/Enchanted Forest.jpg" alt="Enchanted Forest" class="h-36 w-full object-cover filter grayscale group-hover:filter-none transition-all duration-300">
+                    <div class="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+                    <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <span class="bg-white px-3 py-1 rounded-full text-xs font-semibold text-indigo-600">Select Template</span>
+                    </div>
+                  </div>
+                  <p class="mt-2 text-center font-medium text-gray-600 text-sm">Enchanted Forest</p>
+                </div>
+              </div>
+
+              <div id="templateMessage" class="mt-4 p-4 bg-yellow-100 text-yellow-800 rounded-lg hidden"></div>
+          
+              <button id="closeNewWebsiteModal" class="absolute top-2 right-2 text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+          
+          <style>
+            .modal-content {
+              animation: modalFadeIn 0.3s ease-out;
+            }
+            
+            @keyframes modalFadeIn {
+              from { opacity: 0; transform: translateY(-20px); }
+              to { opacity: 1; transform: translateY(0); }
+            }
+          </style>
+        <script src="./js/builder.js"></script>
+    </body>
+</html>

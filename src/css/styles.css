@@ -1,0 +1,488 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+    .button-style-1 {
+        @apply bg-black text-white border-2 border-cyan-400 rounded-md px-4 py-2 uppercase tracking-wider no-underline 
+      shadow-[0_0_10px_#0ff,0_0_20px_#0ff,0_0_30px_#0ff] transition-all duration-300 ease-in-out;
+    }
+    .button-style-1:hover {
+        @apply bg-cyan-400 text-black shadow-[0_0_20px_#0ff,0_0_30px_#0ff,0_0_40px_#0ff];
+    }
+
+    .button-style-2 {
+        @apply bg-gradient-to-r from-yellow-200 via-pink-400 to-purple-400 text-white rounded-full px-4 py-2 
+      font-bold no-underline relative overflow-hidden;
+    }
+    .button-style-2::before {
+        content: "";
+        @apply absolute -top-1/2 -left-1/2 w-[200%] h-[200%];
+        background: linear-gradient(
+            45deg,
+            rgba(255, 255, 255, 0.13) 25%,
+            transparent 25%,
+            transparent 50%,
+            rgba(255, 255, 255, 0.13) 50%,
+            rgba(255, 255, 255, 0.13) 75%,
+            transparent 75%,
+            transparent 100%
+        );
+        background-size: 20px 20px;
+        animation: holographic 5s linear infinite;
+    }
+
+    #textElements li,
+    #mediaElements li,
+    #interactiveElements li,
+    #layoutElements li {
+        @apply bg-gray-100 p-2 rounded shadow cursor-grab hover:bg-gray-200 transition-colors flex items-center text-sm;
+    }
+
+    #textElements li i,
+    #mediaElements li i,
+    #interactiveElements li i,
+    #layoutElements li i {
+        @apply w-5 h-5 mr-2;
+    }
+
+    .button-style-3 {
+        @apply bg-blue-600 text-white border-4 border-black px-4 py-2 no-underline 
+      shadow-[5px_5px_0_#000] transition-all duration-100 ease-in-out;
+    }
+    .button-style-3:hover {
+        @apply transform translate-x-0.5 translate-y-0.5 shadow-[3px_3px_0_#000];
+    }
+
+    .button-style-4 {
+        @apply bg-gradient-to-r from-pink-400 to-pink-600 text-white rounded-full px-6 py-3 
+      text-lg no-underline shadow-lg transition-all duration-300 ease-in-out;
+    }
+    .button-style-4:hover {
+        @apply transform scale-105 shadow-xl;
+    }
+
+    .button-style-5 {
+        @apply text-white rounded-md px-4 py-2 no-underline relative overflow-hidden;
+        background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #8b00ff);
+        background-size: 600% 600%;
+        animation: rainbow 5s ease infinite;
+    }
+    .button-style-6 {
+        @apply bg-black text-green-400 border-2 border-green-400 px-4 py-2 no-underline relative 
+      overflow-hidden;
+    }
+    .button-style-6::before,
+    .button-style-6::after {
+        content: attr(data-text);
+        @apply absolute top-0 left-0 w-full h-full bg-black flex items-center justify-center;
+    }
+    .button-style-6::before {
+        @apply left-0.5 text-pink-500 animate-glitch-1;
+    }
+    .button-style-6::after {
+        @apply -left-0.5 text-cyan-400 animate-glitch-2;
+    }
+}
+
+@keyframes holographic {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes rainbow {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+@keyframes glitch-1 {
+    0% {
+        clip: rect(5px, 9999px, 75px, 0);
+    }
+    25% {
+        clip: rect(65px, 9999px, 91px, 0);
+    }
+    50% {
+        clip: rect(3px, 9999px, 98px, 0);
+    }
+    75% {
+        clip: rect(87px, 9999px, 35px, 0);
+    }
+    100% {
+        clip: rect(43px, 9999px, 23px, 0);
+    }
+}
+
+@keyframes glitch-2 {
+    0% {
+        clip: rect(82px, 9999px, 42px, 0);
+    }
+    25% {
+        clip: rect(14px, 9999px, 30px, 0);
+    }
+    50% {
+        clip: rect(64px, 9999px, 84px, 0);
+    }
+    75% {
+        clip: rect(37px, 9999px, 92px, 0);
+    }
+    100% {
+        clip: rect(72px, 9999px, 55px, 0);
+    }
+}
+
+:root {
+    --theme-color: #4f46e5; /* Default indigo-600 color */
+}
+
+body {
+    font-family: "Playfair Display", sans-serif;
+}
+
+.draggable-element {
+    position: absolute;
+}
+
+.resizer {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 20px;
+    height: 20px;
+    cursor: se-resize;
+    z-index: 10;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.modal-content {
+    animation: modalFadeIn 0.3s ease-out;
+}
+.font-roboto {
+    font-family: "Roboto", sans-serif;
+}
+.font-opensans {
+    font-family: "Open Sans", sans-serif;
+}
+.font-lato {
+    font-family: "Lato", sans-serif;
+}
+.font-montserrat {
+    font-family: "Montserrat", sans-serif;
+}
+.font-playfair {
+    font-family: "Playfair Display", serif;
+}
+.font-merriweather {
+    font-family: "Merriweather", serif;
+}
+.font-nunito {
+    font-family: "Nunito", sans-serif;
+}
+.font-raleway {
+    font-family: "Raleway", sans-serif;
+}
+.font-poppins {
+    font-family: "Poppins", sans-serif;
+}
+.font-ubuntu {
+    font-family: "Ubuntu", sans-serif;
+}
+
+#elementsList li {
+    display: flex;
+    align-items: flex-start;
+    padding: 0.5rem;
+}
+#elementsList li i {
+    margin-top: 0.3rem;
+}
+
+.glitter-text {
+    font-weight: bold;
+    background-image: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: sparkle 1.5s linear infinite;
+}
+
+@keyframes sparkle {
+    0% {
+        background-position: 0% 50%;
+    }
+    100% {
+        background-position: 100% 50%;
+    }
+}
+
+.marquee-banner {
+    background-color: #ffff00;
+    color: #ff00ff;
+    font-weight: bold;
+    padding: 5px;
+}
+
+.alert-box {
+    padding: 10px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.alert-info {
+    background-color: #e3f2fd;
+    color: #0d47a1;
+    border: 1px solid #0d47a1;
+}
+
+.alert-success {
+    background-color: #e8f5e9;
+    color: #1b5e20;
+    border: 1px solid #1b5e20;
+}
+
+.alert-warning {
+    background-color: #fff3e0;
+    color: #e65100;
+    border: 1px solid #e65100;
+}
+
+.alert-error {
+    background-color: #ffebee;
+    color: #b71c1c;
+    border: 1px solid #b71c1c;
+}
+
+.min-h-40px {
+    min-height: 40px;
+}
+.modal-window {
+    z-index: 1000000 !important;
+}
+.modal-window-top {
+    z-index: 10000000 !important;
+}
+@keyframes float {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+@keyframes spin-slow {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+.animate-float {
+    animation: float 6s ease-in-out infinite;
+}
+.animate-spin-slow {
+    animation: spin-slow 12s linear infinite;
+}
+
+.element-holder {
+    height: 100%;
+}
+.glitchgen-footer {
+    z-index: 1000000 !important;
+}
+/* Spinning 3D Text styles */
+.perspective-500 {
+    perspective: 500px;
+}
+
+.transform-style-3d {
+    transform-style: preserve-3d;
+}
+
+@keyframes spin-slow {
+    from {
+        transform: rotateY(0deg);
+    }
+    to {
+        transform: rotateY(360deg);
+    }
+}
+
+@keyframes spin-medium {
+    from {
+        transform: rotateY(0deg);
+    }
+    to {
+        transform: rotateY(360deg);
+    }
+}
+
+@keyframes spin-fast {
+    from {
+        transform: rotateY(0deg);
+    }
+    to {
+        transform: rotateY(360deg);
+    }
+}
+
+.animate-spin-slow {
+    animation: spin-slow 10s linear infinite;
+}
+
+.animate-spin-medium {
+    animation: spin-medium 5s linear infinite;
+}
+
+.animate-spin-fast {
+    animation: spin-fast 2s linear infinite;
+}
+
+.text-style-neon {
+    color: #fff;
+    text-shadow:
+        0 0 5px #fff,
+        0 0 10px #fff,
+        0 0 15px #fff,
+        0 0 20px #ff00de,
+        0 0 35px #ff00de,
+        0 0 40px #ff00de,
+        0 0 50px #ff00de,
+        0 0 75px #ff00de;
+}
+
+.text-style-rainbow {
+    background: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: normal !important;
+}
+
+.text-style-metallic {
+    background: linear-gradient(to bottom, #d3d3d3, #a9a9a9 50%, #808080 50%, #d3d3d3);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.text-style-glitch {
+    position: relative;
+    color: #f112cf;
+}
+
+.text-style-glitch::before,
+.text-style-glitch::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.text-style-glitch::before {
+    left: 2px;
+    text-shadow: -2px 0 #ff00de;
+    clip: rect(24px, 550px, 90px, 0);
+    animation: glitch-anim 3s infinite linear alternate-reverse;
+}
+
+.text-style-glitch::after {
+    left: -2px;
+    text-shadow: -2px 0 #00fff9;
+    clip: rect(85px, 550px, 140px, 0);
+    animation: glitch-anim 2s infinite linear alternate-reverse;
+}
+
+@keyframes glitch-anim {
+    0% {
+        clip: rect(7px, 9999px, 91px, 0);
+    }
+    25% {
+        clip: rect(41px, 9999px, 27px, 0);
+    }
+    50% {
+        clip: rect(50px, 9999px, 69px, 0);
+    }
+    75% {
+        clip: rect(67px, 9999px, 98px, 0);
+    }
+    100% {
+        clip: rect(14px, 9999px, 56px, 0);
+    }
+}
+
+.text-style-holographic {
+    background: linear-gradient(45deg, #ff00de, #00fff9, #ff00de);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: holographic 5s ease infinite;
+}
+
+@keyframes holographic {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.text-style-pixelated {
+    font-family: "Press Start 2P", cursive;
+    color: #39ff14;
+    text-shadow: 2px 2px #000;
+}
+
+@layer components {
+    .text-neon-green {
+        color: #39ff14;
+        text-shadow:
+            0 0 5px #39ff14,
+            0 0 10px #39ff14,
+            0 0 20px #39ff14;
+    }
+
+    .border-neon-green {
+        border-color: #39ff14;
+        box-shadow:
+            0 0 5px #39ff14,
+            0 0 10px #39ff14;
+    }
+
+    .bg-neon-green {
+        background-color: #39ff14;
+    }
+
+    .web-ring a {
+        transition: all 0.3s ease;
+    }
+
+    .web-ring a:hover {
+        transform: scale(1.05);
+    }
+}
+

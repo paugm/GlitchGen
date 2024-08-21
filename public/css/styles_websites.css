@@ -1,0 +1,199 @@
+/* Mobile Responsive CSS for Exported Websites */
+
+@media screen and (max-width: 767px) {
+    /* Reset the app container to full width  */
+    #app-container {
+        width: 100% !important;
+        height: auto !important;
+        min-height: 100vh;
+        overflow-x: hidden;
+    }
+
+    /* Style for all exported elements */
+    .exported-element {
+        position: relative !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 100px;
+        margin-bottom: 20px;
+        box-sizing: border-box;
+        padding: 10px;
+    }
+
+    /* Ensure text is readable on small screens */
+    body,
+    .exported-element {
+        font-size: 16px !important;
+        line-height: 1.5 !important;
+    }
+
+
+    /* Ensure images and videos are responsive */
+    img,
+    video,
+    iframe {
+        max-width: 100% !important;
+        height: auto !important;
+    }
+
+    /* Adjust button styles for better touch targets */
+    button,
+    .button-style-1,
+    .button-style-2,
+    .button-style-3,
+    .button-style-4,
+    .button-style-5,
+    .button-style-6 {
+        min-height: 44px;
+        padding: 10px 20px !important;
+        font-size: 1rem !important;
+    }
+
+    /* Make sure tables are scrollable horizontally if they're too wide */
+    table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    /* Adjust the footer for mobile */
+    .glitchgen-footer {
+        position: relative !important;
+        padding: 10px !important;
+    }
+
+    /* Hide any desktop-only elements */
+    .desktop-only {
+        display: none !important;
+    }
+
+    /* Ensure form inputs are easily tappable */
+    input,
+    select,
+    textarea {
+        font-size: 16px !important;
+        min-height: 44px;
+        padding: 10px !important;
+    }
+
+    /* Adjust spacing for better readability */
+    p,
+    ul,
+    ol {
+        margin-bottom: 15px !important;
+    }
+
+    /* Ensure proper spacing between list items */
+    li {
+        margin-bottom: 10px !important;
+    }
+
+    /* Make sure fixed position elements don't cover content */
+    .fixed {
+        position: relative !important;
+    }
+    /* Ensure proper text wrapping */
+    * {
+        word-wrap: break-word !important;
+        overflow-wrap: break-word !important;
+    }
+
+    /* Adjust any grid or flex layouts for single column on mobile */
+    .grid,
+    .flex {
+        display: block !important;
+    }
+
+    /* Ensure proper spacing between elements */
+    * + * {
+        margin-top: 15px !important;
+    }
+
+    /* Video Player Responsive Styles */
+    .video-container {
+        position: relative;
+        padding-bottom: 56.25%; /* 16:9 aspect ratio */
+        height: 0;
+        overflow: hidden;
+    }
+
+    .video-container iframe,
+    .video-container object,
+    .video-container embed {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    /* Website Loader Responsive Styles */
+    .website-container {
+        height: 300px !important;
+    }
+
+    /* Weather Widget Responsive Styles */
+    .weather-widget {
+        padding: 15px !important;
+    }
+
+    .weather-widget .temperature {
+        font-size: 2rem !important;
+    }
+
+    /* Emoji Responsive Styles */
+    .emoji-container {
+        font-size: 3rem !important;
+    }
+
+    /* Music Box Responsive Styles */
+    .music-box {
+        padding: 15px !important;
+    }
+
+    .music-box h3 {
+        font-size: 1.2rem !important;
+    }
+
+    /* Web Ring Responsive Styles */
+    .web-ring {
+        flex-direction: column !important;
+    }
+
+    .web-ring a {
+        margin: 5px 0 !important;
+    }
+
+    /* Info Card Responsive Styles */
+    .info-card {
+        max-width: 100% !important;
+    }
+
+    /* HTML Block Responsive Styles */
+    .html-block {
+        max-width: 100% !important;
+        overflow-x: auto;
+    }
+
+    /* Glitter Text Responsive Styles */
+    .glitter-text {
+        font-size: 3rem !important;
+    }
+
+    /* Marquee Banner Responsive Styles */
+    .marquee-banner {
+        font-size: 4rem !important;
+    }
+
+    /* Alert Box Responsive Styles */
+    .alert-box {
+        max-width: 100% !important;
+    }
+    .placeholder {
+        display: none !important;
+    }
+    iframe[src*="youtube.com"] { max-width:100%; height:auto; aspect-ratio:16/9; }
+    iframe[src*="vimeo.com"] { max-width:100%; height:auto; aspect-ratio:16/9; }
+}

@@ -1,0 +1,31 @@
+{
+  "name": "glitchgen",
+  "version": "0.4.1",
+  "description": "Web application for building retro-inspired websites using modern web technologies. Building a time machine to the 90s web.",
+  "main": "public/index.html",
+  "scripts": {
+    "build": "webpack --mode=production",
+    "build:css": "tailwindcss -i ./src/css/styles.css -o ./public/css/styles.css --minify"
+  },
+  "keywords": [
+    "AI",
+    "webapp",
+    "builder"
+  ],
+  "author": "Pau Garcia-Mila",
+  "license": "MIT",
+  "devDependencies": {
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.41",
+    "tailwindcss": "^3.4.9",
+    "webpack": "^5.93.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "dompurify": "^3.1.6",
+    "emoji-mart": "^5.6.0",
+    "gsap": "^3.12.5",
+    "interactjs": "^1.10",
+    "prettier": "^3.3.3"
+  }
+}

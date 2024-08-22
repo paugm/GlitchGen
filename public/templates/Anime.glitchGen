@@ -6,7 +6,7 @@
   "textColor": "#ff69b4",
   "dropZoneWidth": 1320,
   "dropZoneHeight": 824,
-  "background": "url(\"./bgs/5.gif\")",
+  "background": "url(\"https://websites.glitchgen.ai/bgs/5.gif\")",
   "elements": [
     {
       "id": "element-1",

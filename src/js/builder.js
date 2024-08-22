@@ -27,12 +27,12 @@ document.addEventListener("DOMContentLoaded", (event) => {
   const bgOptions = document.getElementById("bgOptions");
   const cancelBgConfig = document.getElementById("cancelBgConfig");
   const backgrounds = [
-    { name: "Bg 1", url: 'url("./bgs/1.gif")' },
-    { name: "Bg 2", url: 'url("./bgs/2.gif")' },
-    { name: "Bg 3", url: 'url("./bgs/3.gif")' },
-    { name: "Bg 4", url: 'url("./bgs/4.gif")' },
-    { name: "Bg 5", url: 'url("./bgs/5.gif")' },
-    { name: "Bg 6", url: 'url("./bgs/6.gif")' },
+    { name: "Bg 1", url: 'url("https://websites.glitchgen.ai/bgs/1.gif")' },
+    { name: "Bg 2", url: 'url("https://websites.glitchgen.ai/bgs/2.gif")' },
+    { name: "Bg 3", url: 'url("https://websites.glitchgen.ai/bgs/3.gif")' },
+    { name: "Bg 4", url: 'url("https://websites.glitchgen.ai/bgs/4.gif")' },
+    { name: "Bg 5", url: 'url("https://websites.glitchgen.ai/bgs/5.gif")' },
+    { name: "Bg 6", url: 'url("https://websites.glitchgen.ai/bgs/6.gif")' },
   ];
 
   const INTERACTION_DELAY = 200;
@@ -1347,7 +1347,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
       <link rel="stylesheet" href="https://websites.glitchgen.ai/css/styles.css">
       <link rel="stylesheet" href="https://websites.glitchgen.ai/css/styles_websites.css">
       <link rel="stylesheet" href="https://websites.glitchgen.ai/css/animate.min.css">
-      <link rel="stylesheet" href="https://websites.glitchgen.ai/css/fa.min.css">
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
       <link href="https://fonts.googleapis.com/css2?family=Roboto&family=Open+Sans&family=Lato&family=Montserrat&family=Playfair+Display&family=Merriweather&family=Nunito&family=Raleway&family=Poppins&family=Ubuntu&display=swap" rel="stylesheet">
       <style>
           body {

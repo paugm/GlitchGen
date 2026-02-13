@@ -10,7 +10,7 @@ The .glitchGen file is a JSON-formatted configuration file used to define the la
 
 The .glitchGen file is a single JSON object containing the following top-level keys:
 
-- `version` (string): The version of the specification. Use "1.6".
+- `version` (string): The version of the specification. Use "1.7".
 - `title` (string): The title of the website.
 - `gridSize` (number): The size of the grid for snapping elements (in pixels). Possible values: 10, 20, 30, 40, 50, 60.
 - `font` (string): The primary font. Possible values: "Roboto", "Open Sans", "Lato", "Montserrat", "Playfair Display", "Merriweather", "Nunito", "Raleway", "Poppins", "Ubuntu".
@@ -129,7 +129,7 @@ The following element types are supported, each with its own set of properties:
 ## Example output:
 
 {
-"version": "1.6",
+"version": "1.7",
   "title": "Nice website title",
   "gridSize": 20,
   "font": "Roboto",

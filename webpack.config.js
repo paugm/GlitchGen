@@ -12,6 +12,6 @@ module.exports = {
       '@': path.resolve(__dirname, 'src'),
     },
   },
-  mode: 'development',
+  mode: 'production',
   devtool: 'source-map'
 };

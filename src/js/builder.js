@@ -1344,6 +1344,8 @@ document.addEventListener("DOMContentLoaded", (event) => {
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>${webTitle}</title>
+      <!-- NOTE: These stylesheets depend on the external domain websites.glitchgen.ai.
+           Exported HTML requires internet access to load these styles correctly. -->
       <link rel="stylesheet" href="https://websites.glitchgen.ai/css/styles.css">
       <link rel="stylesheet" href="https://websites.glitchgen.ai/css/styles_websites.css">
       <link rel="stylesheet" href="https://websites.glitchgen.ai/css/animate.min.css">
@@ -1399,6 +1401,17 @@ document.addEventListener("DOMContentLoaded", (event) => {
           elementContent = `<img src="${img.src}" alt="${img.alt || ""}" style="width: 100%; height: 100%; object-fit: ${fitStyle};">`;
         }
       }
+
+      // Strip builder UI elements from exported content
+      let tempDiv = document.createElement('div');
+      tempDiv.innerHTML = elementContent;
+      // Remove resizer handles
+      tempDiv.querySelectorAll('.resizer').forEach(el => el.remove());
+      // Unwrap element-holder divs (keep their content)
+      tempDiv.querySelectorAll('.element-holder').forEach(holder => {
+          holder.replaceWith(...holder.childNodes);
+      });
+      elementContent = tempDiv.innerHTML;
 
       htmlContent += `
           <div class="exported-element" style="left: ${element.style.left}; top: ${element.style.top}; width: ${element.style.width}; height: ${element.style.height}; min-width: ${element.style.minWidth}; min-height: ${element.style.minHeight}; z-index: ${element.style.zIndex};">

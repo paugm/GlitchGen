@@ -306,6 +306,7 @@ body {
 
 .element-holder {
     height: 100%;
+    pointer-events: none;
 }
 .glitchgen-footer {
     z-index: 1000000 !important;

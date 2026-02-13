@@ -1,6 +1,6 @@
 import DOMPurify from "dompurify";
 import { Picker } from "emoji-mart";
-const version_elements = "1.7";
+export const version_elements = "1.7";
 
 const elementConfigs = {
   "Upload Image": {
@@ -962,13 +962,13 @@ const elementConfigs = {
     innerHTML: `
     <div class="music-box w-full h-full rounded-lg shadow-lg flex flex-col items-center justify-center p-4 bg-gradient-to-br from-amber-200 to-yellow-400 text-amber-800">
       <h3 class="text-xl font-bold mb-2 song-title">Music Box!</h3>
-      <button id="playButton" class="play-button bg-opacity-50 hover:bg-opacity-75 font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-105" data-song="starwars">
+      <button class="play-button-trigger play-button bg-opacity-50 hover:bg-opacity-75 font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-105" data-song="starwars">
         <i class="fas fa-play mr-2"></i>Play
       </button>
     </div>
     <script>
       (function() {
-        const playButton = document.currentScript.previousElementSibling.querySelector('#playButton');
+        const playButton = document.currentScript.previousElementSibling.querySelector('.play-button-trigger');
         const songTitle = document.currentScript.previousElementSibling.querySelector('.song-title');
         let isPlaying = false;
         let currentAudio = null;
@@ -1145,7 +1145,7 @@ const elementConfigs = {
             button.textContent = style.name;
             button.onclick = () => {
               const musicBox = element.querySelector(".music-box");
-              const playButton = element.querySelector("#playButton");
+              const playButton = element.querySelector(".play-button-trigger");
               musicBox.className = `music-box w-full h-full rounded-lg shadow-lg flex flex-col items-center justify-center p-4 ${style.classes}`;
               playButton.className = `play-button ${style.classes.includes("text-neon-green") ? "text-neon-green" : "text-inherit"} bg-opacity-50 hover:bg-opacity-75 font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-105`;
               element.setAttribute("data-style", style.name);
@@ -1159,17 +1159,17 @@ const elementConfigs = {
     ],
     getProperties: (element) => ({
       song:
-        element.querySelector("#playButton").getAttribute("data-song") ||
+        element.querySelector(".play-button-trigger").getAttribute("data-song") ||
         "starwars",
       customMelody:
         element
-          .querySelector("#playButton")
+          .querySelector(".play-button-trigger")
           .getAttribute("data-custom-melody") || "",
       customTitle: element.querySelector(".song-title").textContent,
       style: element.getAttribute("data-style") || "Classic",
     }),
     setProperties: (element, properties) => {
-      const playButton = element.querySelector("#playButton");
+      const playButton = element.querySelector(".play-button-trigger");
       const songTitle = element.querySelector(".song-title");
       const musicBox = element.querySelector(".music-box");
 

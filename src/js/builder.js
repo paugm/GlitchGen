@@ -60,6 +60,136 @@ document.addEventListener("DOMContentLoaded", (event) => {
   let justResized = false;
   let elementCounter = 0;
 
+  // ── Undo / Redo system ────────────────────────────────────────────────
+  const MAX_HISTORY = 50;
+  let historyStack = [];
+  let historyPointer = -1;
+  let isRestoringState = false; // flag to prevent capturing state during undo/redo restore
+
+  /**
+   * Captures the current canvas state as a serializable snapshot.
+   * @returns {Object} A snapshot of all elements on the canvas.
+   */
+  function captureState() {
+    const dz = document.getElementById("drop-zone");
+    if (!dz) return null;
+    const elements = Array.from(dz.querySelectorAll(".draggable-element"));
+    return {
+      title: document.getElementById("webTitle")?.textContent || "",
+      background: dz.style.backgroundImage || "",
+      elements: elements.map((el) => {
+        const elType = el.getAttribute("data-element-type");
+        const config = elementConfigs[elType];
+        return {
+          id: el.id,
+          type: elType,
+          left: el.style.left,
+          top: el.style.top,
+          width: el.style.width,
+          height: el.style.height,
+          minWidth: el.style.minWidth,
+          minHeight: el.style.minHeight,
+          zIndex: el.style.zIndex,
+          properties: config ? config.getProperties(el) : {},
+        };
+      }),
+    };
+  }
+
+  /**
+   * Pushes the current state onto the history stack.
+   * Trims forward history on new action (no redo after new change).
+   */
+  function pushState() {
+    if (isRestoringState) return;
+    const snapshot = captureState();
+    if (!snapshot) return;
+    // Trim any redo states ahead of the pointer
+    historyStack = historyStack.slice(0, historyPointer + 1);
+    historyStack.push(JSON.stringify(snapshot));
+    // Ring-buffer: drop oldest if over limit
+    if (historyStack.length > MAX_HISTORY) {
+      historyStack.shift();
+    }
+    historyPointer = historyStack.length - 1;
+    updateUndoRedoButtons();
+  }
+
+  /**
+   * Restores canvas state from a snapshot string.
+   * @param {string} snapshotStr - JSON string of the snapshot to restore.
+   */
+  function restoreState(snapshotStr) {
+    const dz = document.getElementById("drop-zone");
+    if (!dz) return;
+    isRestoringState = true;
+    const snapshot = JSON.parse(snapshotStr);
+
+    // Clear current elements
+    const existing = Array.from(dz.querySelectorAll(".draggable-element"));
+    existing.forEach((el) => el.remove());
+
+    // Restore background
+    dz.style.backgroundImage = snapshot.background || "";
+
+    // Recreate elements
+    snapshot.elements.forEach((elData) => {
+      const config = elementConfigs[elData.type];
+      if (!config) return;
+      const newEl = createElementByType(elData.type, {
+        ...elData.properties,
+        id: elData.id,
+      });
+      if (!newEl) return;
+      newEl.style.position = "absolute";
+      newEl.style.left = elData.left;
+      newEl.style.top = elData.top;
+      newEl.style.width = elData.width;
+      newEl.style.height = elData.height;
+      if (elData.minWidth) newEl.style.minWidth = elData.minWidth;
+      if (elData.minHeight) newEl.style.minHeight = elData.minHeight;
+      newEl.style.zIndex = elData.zIndex;
+      dz.appendChild(newEl);
+      addDragFunctionality(newEl);
+      addResize(newEl);
+    });
+
+    togglePlaceholder();
+    dragDropManager.initializeExistingElements();
+    isRestoringState = false;
+  }
+
+  /**
+   * Undo: go back one step in history.
+   */
+  function undo() {
+    if (historyPointer <= 0) return;
+    historyPointer--;
+    restoreState(historyStack[historyPointer]);
+    updateUndoRedoButtons();
+  }
+
+  /**
+   * Redo: go forward one step in history.
+   */
+  function redo() {
+    if (historyPointer >= historyStack.length - 1) return;
+    historyPointer++;
+    restoreState(historyStack[historyPointer]);
+    updateUndoRedoButtons();
+  }
+
+  /**
+   * Updates the disabled state of undo/redo toolbar buttons.
+   */
+  function updateUndoRedoButtons() {
+    const undoBtn = document.getElementById("undoButton");
+    const redoBtn = document.getElementById("redoButton");
+    if (undoBtn) undoBtn.style.opacity = historyPointer <= 0 ? "0.4" : "1";
+    if (redoBtn) redoBtn.style.opacity = historyPointer >= historyStack.length - 1 ? "0.4" : "1";
+  }
+  // ── End Undo / Redo ───────────────────────────────────────────────────
+
   const dropZone = document.getElementById("drop-zone");
   dragDropManager = new DragDropManager(
     dropZone,
@@ -265,6 +395,20 @@ document.addEventListener("DOMContentLoaded", (event) => {
     if (event.key === "Escape") {
       modalSystem.closeModal();
     }
+    // Undo: Ctrl+Z (or Cmd+Z on Mac)
+    if ((event.ctrlKey || event.metaKey) && !event.shiftKey && event.key === "z") {
+      event.preventDefault();
+      undo();
+    }
+    // Redo: Ctrl+Y or Ctrl+Shift+Z (or Cmd equivalents)
+    if ((event.ctrlKey || event.metaKey) && event.key === "y") {
+      event.preventDefault();
+      redo();
+    }
+    if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === "z") {
+      event.preventDefault();
+      redo();
+    }
   });
 
   /**
@@ -449,6 +593,12 @@ document.addEventListener("DOMContentLoaded", (event) => {
   document.getElementById("exportWeb").addEventListener("click", exportWeb);
 
   /**
+   * Event listeners for undo/redo toolbar buttons
+   */
+  document.getElementById("undoButton").addEventListener("click", undo);
+  document.getElementById("redoButton").addEventListener("click", redo);
+
+  /**
    * Event listener for input changes on elements
    */
   dropZone.addEventListener("input", function (e) {
@@ -480,6 +630,15 @@ document.addEventListener("DOMContentLoaded", (event) => {
    * Marks changes as unsaved when an element is removed
    */
   dropZone.addEventListener("elementremoved", markUnsavedChanges);
+
+  /**
+   * Event listener for when an element is moved (drag ended with position change)
+   * Records undo state after move
+   */
+  dropZone.addEventListener("elementMoved", () => {
+    markUnsavedChanges();
+    pushState();
+  });
 
   /**
    * Populates the elements list in the sidebar with available elements grouped by category.
@@ -1021,6 +1180,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
         modalSystem.closeModal(); // Close the confirm modal
         modalSystem.closeModal(); // Close the element config modal
         currentConfigElement = null;
+        pushState(); // Record state after element deletion
       }
     }
   });
@@ -1268,6 +1428,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
     modalSystem.closeModal();
     markUnsavedChanges();
     dispatchElementAddedEvent(element.id);
+    pushState(); // Record state after property changes
 
     // Remove the key listener when closing the modal
     elementConfigModal.removeEventListener("keydown", handleConfigModalKeydown);
@@ -1610,6 +1771,11 @@ document.addEventListener("DOMContentLoaded", (event) => {
 
     // Re-initialize drag functionality for all elements
     dragDropManager.initializeExistingElements();
+
+    // Reset undo history and capture initial loaded state
+    historyStack = [];
+    historyPointer = -1;
+    pushState();
   }
 
   /**
@@ -1722,6 +1888,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
       togglePlaceholder();
 
       dispatchElementAddedEvent(newElement.id);
+      pushState(); // Record state after element creation
     }
   }
 
@@ -1933,6 +2100,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
         document.removeEventListener("mousemove", resize);
         document.removeEventListener("mouseup", stopResize);
         markUnsavedChanges();
+        pushState(); // Record state after resize
 
         // Call onResize method if it exists for the element
         const elementType = element.getAttribute("data-element-type");
@@ -2003,4 +2171,96 @@ document.addEventListener("DOMContentLoaded", (event) => {
   document
     .getElementById("cancelElementConfig")
     .addEventListener("click", () => modalSystem.closeModal());
+
+  // ── Template Gallery ──────────────────────────────────────────────────
+  const openGalleryBtn = document.getElementById("openGallery");
+  const closeGalleryBtn = document.getElementById("closeGallery");
+  const shareTemplateBtn = document.getElementById("shareTemplate");
+
+  if (openGalleryBtn) {
+    openGalleryBtn.addEventListener("click", () => {
+      loadGallery();
+      modalSystem.openModal("galleryModal");
+    });
+  }
+
+  if (closeGalleryBtn) {
+    closeGalleryBtn.addEventListener("click", () => modalSystem.closeModal());
+  }
+
+  // Share Template = same as Save Website (downloads .glitchGen file)
+  if (shareTemplateBtn) {
+    shareTemplateBtn.addEventListener("click", saveCurrentApp);
+  }
+
+  /**
+   * Loads gallery data from gallery.json and renders template cards.
+   */
+  function loadGallery() {
+    const galleryGrid = document.getElementById("galleryGrid");
+    if (!galleryGrid) return;
+    galleryGrid.innerHTML = '<p class="text-gray-400 text-center col-span-3">Loading templates...</p>';
+
+    fetch("./templates/gallery.json")
+      .then((res) => res.json())
+      .then((data) => {
+        galleryGrid.innerHTML = "";
+        if (!data.templates || data.templates.length === 0) {
+          galleryGrid.innerHTML = '<p class="text-gray-400 text-center col-span-3">No templates available yet.</p>';
+          return;
+        }
+        data.templates.forEach((tpl) => {
+          const card = document.createElement("div");
+          card.className = "group border-2 border-gray-200 rounded-lg overflow-hidden hover:border-purple-500 hover:shadow-lg transition-all duration-300 cursor-pointer";
+          card.innerHTML = `
+            <div class="relative h-40 overflow-hidden bg-gray-100">
+              <img src="./templates/${tpl.thumbnail}" alt="${tpl.name}" class="w-full h-full object-cover filter group-hover:filter-none transition-all duration-300 grayscale">
+              <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            </div>
+            <div class="p-4">
+              <h3 class="font-bold text-gray-800 text-lg">${tpl.name}</h3>
+              <p class="text-xs text-gray-400 mb-1">by ${tpl.author}</p>
+              <p class="text-sm text-gray-600 mb-3">${tpl.description}</p>
+              <div class="flex flex-wrap gap-1 mb-3">
+                ${tpl.tags.map((tag) => `<span class="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full">${tag}</span>`).join("")}
+              </div>
+              <button class="use-template-btn w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-2 rounded-md text-sm font-medium hover:from-purple-600 hover:to-pink-600 transition-all duration-200">
+                Use Template
+              </button>
+            </div>
+          `;
+          card.querySelector(".use-template-btn").addEventListener("click", () => {
+            useGalleryTemplate(tpl.file);
+          });
+          galleryGrid.appendChild(card);
+        });
+      })
+      .catch((err) => {
+        console.error("Error loading gallery:", err);
+        galleryGrid.innerHTML = '<p class="text-red-400 text-center col-span-3">Could not load gallery. Are you running a local server?</p>';
+      });
+  }
+
+  /**
+   * Loads a template file from the gallery.
+   * @param {string} filename - The template file name to load.
+   */
+  function useGalleryTemplate(filename) {
+    fetch(`./templates/${filename}`)
+      .then((res) => res.json())
+      .then((data) => {
+        loadWebFromFile(
+          new Blob([JSON.stringify(data)], { type: "application/json" })
+        );
+        modalSystem.closeModal(); // close gallery
+      })
+      .catch((err) => {
+        console.error("Error loading template:", err);
+        alert("Could not load template. Make sure you are running a local server.");
+      });
+  }
+  // ── End Template Gallery ────────────────────────────────────────────────
+
+  // Capture initial empty state for undo
+  pushState();
 });

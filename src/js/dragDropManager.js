@@ -108,6 +108,12 @@ export class DragDropManager {
       if (endLeft === this.startLeft && endTop === this.startTop) {
         // The element didn't move, treat it as a click
         this.openElementConfig(this.currentElement);
+      } else {
+        // Element was moved — dispatch event so builder can record undo state
+        const evt = new CustomEvent("elementMoved", {
+          detail: { element: this.currentElement },
+        });
+        this.dropZone.dispatchEvent(evt);
       }
     }
 

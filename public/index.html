@@ -84,6 +84,22 @@
                             <i class="fas fa-file-export w-4 h-4 mr-2"></i>
                             Export Website
                         </li>
+                        <li class="flex items-center space-x-2 mt-2">
+                            <button id="undoButton" class="flex-1 bg-gray-100 p-2 rounded shadow cursor-pointer hover:bg-gray-200 transition-colors flex items-center justify-center text-sm" style="opacity: 0.4;" title="Undo (Ctrl+Z)">
+                                <i class="fas fa-undo w-4 h-4 mr-1"></i> Undo
+                            </button>
+                            <button id="redoButton" class="flex-1 bg-gray-100 p-2 rounded shadow cursor-pointer hover:bg-gray-200 transition-colors flex items-center justify-center text-sm" style="opacity: 0.4;" title="Redo (Ctrl+Y)">
+                                <i class="fas fa-redo w-4 h-4 mr-1"></i> Redo
+                            </button>
+                        </li>
+                        <li class="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-2 rounded shadow cursor-pointer hover:from-purple-600 hover:to-pink-600 transition-colors flex items-center text-sm mt-2" id="openGallery">
+                            <i class="fas fa-images w-4 h-4 mr-2"></i>
+                            Template Gallery
+                        </li>
+                        <li class="bg-gray-100 p-2 rounded shadow cursor-pointer hover:bg-gray-200 transition-colors flex items-center text-sm" id="shareTemplate">
+                            <i class="fas fa-share-alt w-4 h-4 mr-2"></i>
+                            Share Template
+                        </li>
 
                     </ul>
                 </div>
@@ -447,6 +463,30 @@
               to { opacity: 1; transform: translateY(0); }
             }
           </style>
+        <!-- Template Gallery Modal -->
+        <div id="galleryModal" class="modal-window fixed inset-0 bg-gray-900 bg-opacity-70 overflow-y-auto h-full w-full hidden flex items-center justify-center">
+            <div class="relative p-6 w-11/12 max-w-5xl bg-white rounded-lg shadow-2xl modal-content max-h-[90vh] overflow-y-auto">
+                <div class="text-center mb-6">
+                    <h2 class="text-3xl font-bold text-gray-800" style="font-family: 'Courier New', monospace;">
+                        <span class="text-purple-600">&#60;</span>Template Gallery<span class="text-pink-600">&#47;&#62;</span>
+                    </h2>
+                    <p class="text-gray-500 mt-2 text-sm italic">Community gallery coming soon! For now, browse built-in templates.</p>
+                    <div class="flex items-center justify-center my-4">
+                        <div class="h-px flex-grow bg-gradient-to-r from-transparent via-purple-400 to-transparent"></div>
+                        <span class="mx-3 text-xs text-gray-400">★ ★ ★</span>
+                        <div class="h-px flex-grow bg-gradient-to-r from-transparent via-pink-400 to-transparent"></div>
+                    </div>
+                </div>
+                <div id="galleryGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Gallery cards will be dynamically inserted here -->
+                </div>
+                <button id="closeGallery" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
         <script src="./js/builder.js"></script>
     </body>
 </html>

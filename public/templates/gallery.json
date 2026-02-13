@@ -1,0 +1,44 @@
+{
+  "templates": [
+    {
+      "name": "Anime",
+      "author": "GlitchGen",
+      "thumbnail": "Anime.jpg",
+      "file": "Anime.glitchGen",
+      "description": "Anime-inspired retro website with vibrant colors and cool effects",
+      "tags": ["anime", "retro", "colorful"]
+    },
+    {
+      "name": "Area 51",
+      "author": "GlitchGen",
+      "thumbnail": "Area 51.jpg",
+      "file": "Area 51.glitchGen",
+      "description": "Top-secret alien-themed website with mysterious vibes",
+      "tags": ["sci-fi", "mystery", "aliens"]
+    },
+    {
+      "name": "Enchanted Forest",
+      "author": "GlitchGen",
+      "thumbnail": "Enchanted Forest.jpg",
+      "file": "Enchanted Forest.glitchGen",
+      "description": "Magical forest-themed website with enchanting design",
+      "tags": ["fantasy", "nature", "magical"]
+    },
+    {
+      "name": "Hollywood",
+      "author": "GlitchGen",
+      "thumbnail": "Hollywood.jpg",
+      "file": "Hollywood.glitchGen",
+      "description": "Glamorous Hollywood-inspired website with star power",
+      "tags": ["entertainment", "glamour", "stars"]
+    },
+    {
+      "name": "Pet Lovers",
+      "author": "GlitchGen",
+      "thumbnail": "Pet Lovers.jpg",
+      "file": "Pet Lovers.glitchGen",
+      "description": "Adorable pet-themed website for animal lovers",
+      "tags": ["pets", "animals", "cute"]
+    }
+  ]
+}

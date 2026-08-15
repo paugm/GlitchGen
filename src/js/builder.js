@@ -1,7 +1,33 @@
 import { gsap } from "gsap";
 import { del, get, set } from "idb-keyval";
-import elementConfigs from "./elements";
-import { DragDropManager } from "./dragDropManager";
+import "@fontsource/vt323/latin-400.css";
+import "@fontsource/press-start-2p/latin-400.css";
+import "@fontsource/comic-neue/latin-400.css";
+import "@fontsource/silkscreen/latin-400.css";
+import "@fontsource/special-elite/latin-400.css";
+import elementConfigs, { escapeHtml } from "./elements";
+import { DragDropManager, isInteractiveTarget } from "./dragDropManager";
+import { getMusicBoxExportScript } from "./musicBox";
+import {
+  DEFAULT_MOBILE_MODE,
+  getMobileExportCss,
+  getMobileExportScript,
+  getMobileModeToggleHtml,
+  normalizeMobileMode,
+} from "./mobileStage";
+import {
+  DEFAULT_FONT,
+  GOOGLE_FONTS_HREF,
+  cssFontFamily,
+} from "./fonts";
+import {
+  FORMAT_VERSION,
+  formatGlitchGenError,
+  migrateGlitchGenFile,
+  parseGlitchGenFile,
+  serializeGlitchGenFile,
+  stripSecrets,
+} from "./glitchGenSchema";
 
 const version = "0.4.1";
 const DRAFT_KEY = "glitchgen-draft";
@@ -47,7 +73,9 @@ document.addEventListener("DOMContentLoaded", (event) => {
   const fileInput = document.getElementById("fileInput");
 
   let fontSelect = document.getElementById("fontSelect");
+  fontSelect.style.fontFamily = cssFontFamily(fontSelect.value);
   let GRID_SIZE = 20;
+  let mobileMode = DEFAULT_MOBILE_MODE;
   let dragDropManager;
   let elementToRemove = null;
   let isDragging = false;
@@ -61,6 +89,8 @@ document.addEventListener("DOMContentLoaded", (event) => {
   let justDropped = false;
   let justResized = false;
   let elementCounter = 0;
+  let selectedElement = null;
+  let nudgeHistoryTimer = null;
 
   // ── Undo / Redo system ────────────────────────────────────────────────
   const MAX_HISTORY = 50;
@@ -130,6 +160,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
     const snapshot = JSON.parse(snapshotStr);
 
     // Clear current elements
+    selectElement(null);
     const existing = Array.from(dz.querySelectorAll(".draggable-element"));
     existing.forEach((el) => el.remove());
 
@@ -228,14 +259,18 @@ document.addEventListener("DOMContentLoaded", (event) => {
       webTitle.textContent = "Your Website";
       GRID_SIZE = 20;
       dragDropManager.gridSize = GRID_SIZE;
-      document.getElementById("fontSelect").value = "Roboto";
+      applyMobileMode(DEFAULT_MOBILE_MODE);
+      document.getElementById("fontSelect").value = DEFAULT_FONT;
+      document.getElementById("fontSelect").style.fontFamily =
+        cssFontFamily(DEFAULT_FONT);
       document.getElementById("textColorInput").value = "#000000";
       dropZone.style.backgroundImage = "";
       updateTextColor("#000000");
-      updateFont("Roboto");
+      updateFont(DEFAULT_FONT);
       historyStack = [];
       historyPointer = -1;
       hasUnsavedChanges = false;
+      selectElement(null);
       modalSystem.closeModal();
       togglePlaceholder();
       del(DRAFT_KEY).catch((err) => console.error("Error clearing draft:", err));
@@ -396,25 +431,305 @@ document.addEventListener("DOMContentLoaded", (event) => {
   };
 
   /**
-   * Event listener for closing modal with Escape key
+   * True when keyboard events should go to a form field, not the canvas.
+   * @param {EventTarget|null} el
+   * @returns {boolean}
    */
+  function isTypingTarget(el) {
+    if (!el || !(el instanceof Element)) return false;
+    const tag = el.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return true;
+    return Boolean(
+      el.closest("[contenteditable='true'], [contenteditable='']")
+    );
+  }
+
+  /**
+   * Turns a website title into a safe download filename.
+   * @param {string} title
+   * @param {string} ext
+   * @returns {string}
+   */
+  function toDownloadName(title, ext) {
+    const base =
+      (title || "web")
+        .trim()
+        .replace(/[<>:"/\\|?*\u0000-\u001f]/g, "")
+        .replace(/\s+/g, "-")
+        .slice(0, 60) || "web";
+    return `${base}.${ext}`;
+  }
+
+  /**
+   * Marks the currently selected canvas element.
+   * @param {HTMLElement|null} element
+   */
+  function selectElement(element) {
+    if (selectedElement && selectedElement !== element) {
+      selectedElement.classList.remove("is-selected");
+    }
+    selectedElement = element && element.isConnected ? element : null;
+    if (selectedElement) {
+      selectedElement.classList.add("is-selected");
+    }
+  }
+
+  /**
+   * Snaps a percentage position to the grid and keeps the element on canvas.
+   * @param {number} value
+   * @param {number} gridPercent
+   * @param {number} sizePercent
+   * @returns {number}
+   */
+  function snapPercent(value, gridPercent, sizePercent) {
+    const snapped =
+      gridPercent > 0 ? Math.round(value / gridPercent) * gridPercent : value;
+    return Math.max(0, Math.min(snapped, 100 - sizePercent));
+  }
+
+  /**
+   * Removes the selected element. Undo can restore it.
+   */
+  function deleteSelectedElement() {
+    const element =
+      selectedElement || document.getElementById(currentConfigElement);
+    if (!element || !element.classList.contains("draggable-element")) return;
+    const id = element.id;
+    element.remove();
+    selectedElement = null;
+    currentConfigElement = null;
+    dispatchElementRemovedEvent(id);
+    togglePlaceholder();
+    while (modalSystem.modalStack.length > 0) {
+      const top = modalSystem.modalStack[modalSystem.modalStack.length - 1];
+      if (top.id === "elementConfigModal" || top.id === "confirmModal") {
+        modalSystem.closeModal();
+      } else {
+        break;
+      }
+    }
+    markUnsavedChanges();
+    pushState();
+  }
+
+  /**
+   * Duplicates the selected element, offset by one grid step.
+   */
+  function duplicateSelectedElement() {
+    if (!selectedElement) return;
+    const type = selectedElement.getAttribute("data-element-type");
+    const config = elementConfigs[type];
+    if (!config) return;
+    const newElement = createElementByType(type, config.getProperties(selectedElement));
+    addDragFunctionality(newElement);
+    addResize(newElement);
+    const dz = dropZone.getBoundingClientRect();
+    const stepX = (GRID_SIZE / dz.width) * 100;
+    const stepY = (GRID_SIZE / dz.height) * 100;
+    const width = parseFloat(selectedElement.style.width) || 10;
+    const height = parseFloat(selectedElement.style.height) || 10;
+    const left = snapPercent(
+      (parseFloat(selectedElement.style.left) || 0) + stepX,
+      stepX,
+      width
+    );
+    const top = snapPercent(
+      (parseFloat(selectedElement.style.top) || 0) + stepY,
+      stepY,
+      height
+    );
+    newElement.style.left = `${left}%`;
+    newElement.style.top = `${top}%`;
+    newElement.style.width = selectedElement.style.width;
+    newElement.style.height = selectedElement.style.height;
+    if (selectedElement.style.minWidth) {
+      newElement.style.minWidth = selectedElement.style.minWidth;
+    }
+    if (selectedElement.style.minHeight) {
+      newElement.style.minHeight = selectedElement.style.minHeight;
+    }
+    assignHighestZIndex(newElement);
+    dropZone.appendChild(newElement);
+    selectElement(newElement);
+    togglePlaceholder();
+    dispatchElementAddedEvent(newElement.id);
+    markUnsavedChanges();
+    pushState();
+  }
+
+  /**
+   * Nudges the selected element by one grid unit (Shift: 10).
+   * @param {string} key
+   * @param {boolean} shiftKey
+   */
+  function nudgeSelectedElement(key, shiftKey) {
+    if (!selectedElement) return;
+    const dz = dropZone.getBoundingClientRect();
+    const stepX = (GRID_SIZE / dz.width) * 100;
+    const stepY = (GRID_SIZE / dz.height) * 100;
+    const mul = shiftKey ? 10 : 1;
+    const width = parseFloat(selectedElement.style.width) || 0;
+    const height = parseFloat(selectedElement.style.height) || 0;
+    let left = parseFloat(selectedElement.style.left) || 0;
+    let top = parseFloat(selectedElement.style.top) || 0;
+    if (key === "ArrowLeft") left -= stepX * mul;
+    if (key === "ArrowRight") left += stepX * mul;
+    if (key === "ArrowUp") top -= stepY * mul;
+    if (key === "ArrowDown") top += stepY * mul;
+    left = Math.max(0, Math.min(left, 100 - width));
+    top = Math.max(0, Math.min(top, 100 - height));
+    selectedElement.style.left = `${left}%`;
+    selectedElement.style.top = `${top}%`;
+    markUnsavedChanges();
+    clearTimeout(nudgeHistoryTimer);
+    nudgeHistoryTimer = setTimeout(() => pushState(), 300);
+  }
+
+  /**
+   * Restores the canvas if the window chrome minimized it.
+   */
+  function ensureCanvasVisible() {
+    const canvas = document.getElementById("main-canvas");
+    const btn = document.getElementById("minimizeCanvas");
+    if (!canvas?.classList.contains("canvas-minimized")) return;
+    canvas.classList.remove("canvas-minimized");
+    if (btn) {
+      btn.setAttribute("aria-pressed", "false");
+      btn.setAttribute("aria-label", "Minimize canvas");
+      btn.title = "Minimize canvas";
+    }
+  }
+
+  /**
+   * Places a new element on the canvas and records undo state.
+   * @param {HTMLElement} newElement
+   * @param {number} leftPercent
+   * @param {number} topPercent
+   */
+  function finishPlacingElement(newElement, leftPercent, topPercent) {
+    newElement.style.left = `${leftPercent}%`;
+    newElement.style.top = `${topPercent}%`;
+    assignHighestZIndex(newElement);
+    dropZone.appendChild(newElement);
+    addDragFunctionality(newElement);
+    addResize(newElement);
+    togglePlaceholder();
+    dispatchElementAddedEvent(newElement.id);
+    selectElement(newElement);
+    markUnsavedChanges();
+    pushState();
+  }
+
+  /**
+   * Adds an element at a pointer position, snapped to the grid.
+   * @param {string} elementType
+   * @param {number} clientX
+   * @param {number} clientY
+   */
+  function placeNewElementAtPoint(elementType, clientX, clientY) {
+    if (!elementConfigs[elementType]) return;
+    const newElement = createElementByType(elementType);
+    const dropZoneRect = dropZone.getBoundingClientRect();
+    const width = parseFloat(newElement.style.width) || 10;
+    const height = parseFloat(newElement.style.height) || 10;
+    const gridX = (GRID_SIZE / dropZoneRect.width) * 100;
+    const gridY = (GRID_SIZE / dropZoneRect.height) * 100;
+    const left = snapPercent(
+      ((clientX - dropZoneRect.left) / dropZoneRect.width) * 100,
+      gridX,
+      width
+    );
+    const top = snapPercent(
+      ((clientY - dropZoneRect.top) / dropZoneRect.height) * 100,
+      gridY,
+      height
+    );
+    finishPlacingElement(newElement, left, top);
+  }
+
+  /**
+   * Adds an element centered on the canvas (sidebar click / keyboard).
+   * @param {string} elementType
+   */
+  function placeElementAtCenter(elementType) {
+    if (!elementConfigs[elementType]) return;
+    const newElement = createElementByType(elementType);
+    const width = parseFloat(newElement.style.width) || 10;
+    const height = parseFloat(newElement.style.height) || 10;
+    const dz = dropZone.getBoundingClientRect();
+    const gridX = (GRID_SIZE / dz.width) * 100;
+    const gridY = (GRID_SIZE / dz.height) * 100;
+    finishPlacingElement(
+      newElement,
+      snapPercent(50 - width / 2, gridX, width),
+      snapPercent(50 - height / 2, gridY, height)
+    );
+  }
+
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape") {
       modalSystem.closeModal();
+      return;
     }
-    // Undo: Ctrl+Z (or Cmd+Z on Mac)
-    if ((event.ctrlKey || event.metaKey) && !event.shiftKey && event.key === "z") {
+
+    const meta = event.ctrlKey || event.metaKey;
+    if (meta && (event.key === "s" || event.key === "S")) {
       event.preventDefault();
-      undo();
+      saveCurrentApp();
+      return;
     }
-    // Redo: Ctrl+Y or Ctrl+Shift+Z (or Cmd equivalents)
-    if ((event.ctrlKey || event.metaKey) && event.key === "y") {
-      event.preventDefault();
-      redo();
+
+    if (isTypingTarget(event.target)) return;
+
+    const modalOpen = modalSystem.modalStack.length > 0;
+    const topModal = modalOpen
+      ? modalSystem.modalStack[modalSystem.modalStack.length - 1]
+      : null;
+    const inElementModal =
+      topModal &&
+      (topModal.id === "elementConfigModal" || topModal.id === "confirmModal");
+
+    if (modalOpen && !inElementModal) return;
+
+    if (!modalOpen) {
+      if (meta && !event.shiftKey && event.key === "z") {
+        event.preventDefault();
+        undo();
+        return;
+      }
+      if (meta && event.key === "y") {
+        event.preventDefault();
+        redo();
+        return;
+      }
+      if (meta && event.shiftKey && event.key === "z") {
+        event.preventDefault();
+        redo();
+        return;
+      }
+      if (meta && (event.key === "d" || event.key === "D")) {
+        event.preventDefault();
+        duplicateSelectedElement();
+        return;
+      }
+      if (
+        event.key === "ArrowLeft" ||
+        event.key === "ArrowRight" ||
+        event.key === "ArrowUp" ||
+        event.key === "ArrowDown"
+      ) {
+        event.preventDefault();
+        nudgeSelectedElement(event.key, event.shiftKey);
+        return;
+      }
     }
-    if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === "z") {
+
+    if (
+      (event.key === "Delete" || event.key === "Backspace") &&
+      selectedElement
+    ) {
       event.preventDefault();
-      redo();
+      deleteSelectedElement();
     }
   });
 
@@ -437,6 +752,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
   webTitle.addEventListener("click", () => {
     document.getElementById("webTitleInput").value = webTitle.textContent;
     document.getElementById("gridSizeInput").value = GRID_SIZE;
+    applyMobileMode(mobileMode);
     modalSystem.openModal("configModal");
   });
 
@@ -461,7 +777,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
    * Event listener for updating font preview in configuration modal
    */
   fontSelect.addEventListener("change", function () {
-    this.style.fontFamily = this.value;
+    this.style.fontFamily = cssFontFamily(this.value);
   });
 
   /**
@@ -489,11 +805,15 @@ document.addEventListener("DOMContentLoaded", (event) => {
     // Update dragDropManager
     dragDropManager.gridSize = GRID_SIZE;
 
+    applyMobileMode(
+      document.querySelector('input[name="mobileMode"]:checked')?.value
+    );
+
     // Update font
     updateFont(document.getElementById("fontSelect").value);
 
     // Close modal
-    configModal.classList.add("hidden");
+    modalSystem.closeModal();
   });
 
   /**
@@ -664,13 +984,33 @@ document.addEventListener("DOMContentLoaded", (event) => {
       if (categoryList) {
         const li = document.createElement("li");
         li.innerHTML = `
-          <i class="mt-1 fas fa-${config.icon}"></i>
+          <i class="mt-1 fas fa-${config.icon}" aria-hidden="true"></i>
           <span class="flex-grow">${elementType}</span>
         `;
         li.setAttribute("draggable", "true");
+        li.setAttribute("role", "button");
+        li.setAttribute("tabindex", "0");
+        li.setAttribute("aria-label", `Add ${elementType}`);
+        li.title = "Click to add, or drag onto the canvas";
         li.addEventListener("dragstart", (e) => {
+          li.dataset.dragging = "true";
           e.dataTransfer.setData("text/plain", elementType);
           createDragPreview(e, elementType);
+        });
+        li.addEventListener("dragend", () => {
+          requestAnimationFrame(() => {
+            delete li.dataset.dragging;
+          });
+        });
+        li.addEventListener("click", () => {
+          if (li.dataset.dragging) return;
+          placeElementAtCenter(elementType);
+        });
+        li.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            placeElementAtCenter(elementType);
+          }
         });
         categoryList.appendChild(li);
       }
@@ -758,31 +1098,45 @@ document.addEventListener("DOMContentLoaded", (event) => {
       (a, b) =>
         (parseInt(a.style.zIndex) || 0) - (parseInt(b.style.zIndex) || 0)
     );
-    return {
-      version,
+    const payload = {
+      version: FORMAT_VERSION,
+      appVersion: version,
       title: webTitle?.textContent || "",
       gridSize: GRID_SIZE,
-      font: document.getElementById("fontSelect")?.value || "Roboto",
+      font: document.getElementById("fontSelect")?.value || DEFAULT_FONT,
       textColor: document.getElementById("textColorInput")?.value || "#000000",
       dropZoneWidth: dz.offsetWidth,
       dropZoneHeight: dz.offsetHeight,
       background: dz.style.backgroundImage || "",
+      mobileMode,
       elements: elements.map((element, index) => {
         const elementType = element.getAttribute("data-element-type");
         const config = elementConfigs[elementType];
+        const left = parseFloat(element.style.left);
+        const top = parseFloat(element.style.top);
+        const width = parseFloat(element.style.width);
+        const height = parseFloat(element.style.height);
         return {
           id: element.id,
           type: elementType,
-          left: parseFloat(element.style.left),
-          top: parseFloat(element.style.top),
-          width: parseFloat(element.style.width),
-          height: parseFloat(element.style.height),
+          left: Number.isFinite(left) ? left : 0,
+          top: Number.isFinite(top) ? top : 0,
+          width: Number.isFinite(width) ? width : 0,
+          height: Number.isFinite(height) ? height : 0,
           layerOrder: index,
           zIndex: element.style.zIndex,
-          properties: config ? config.getProperties(element) : {},
+          properties: stripSecrets(config ? config.getProperties(element) : {}),
         };
       }),
     };
+    try {
+      return serializeGlitchGenFile(payload);
+    } catch (error) {
+      console.error("Could not validate save payload:", error);
+      const fallback = migrateGlitchGenFile(payload);
+      fallback.version = FORMAT_VERSION;
+      return fallback;
+    }
   }
 
   /**
@@ -824,7 +1178,12 @@ document.addEventListener("DOMContentLoaded", (event) => {
           "Restore your last unsaved website?"
         );
         if (shouldRestore) {
-          loadWebData(draft, { keepDraft: true });
+          try {
+            loadWebData(parseGlitchGenFile(draft), { keepDraft: true });
+          } catch (parseErr) {
+            console.warn("Draft failed schema, loading raw:", parseErr);
+            loadWebData(draft, { keepDraft: true });
+          }
           hasUnsavedChanges = true;
         } else {
           await del(DRAFT_KEY);
@@ -857,7 +1216,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "web.glitchGen";
+    a.download = toDownloadName(appData.title, "glitchGen");
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -942,6 +1301,18 @@ document.addEventListener("DOMContentLoaded", (event) => {
    */
   function compressImage(file, maxWidth, maxHeight, quality) {
     return new Promise((resolve, reject) => {
+      const type = (file.type || "").toLowerCase();
+      const name = (file.name || "").toLowerCase();
+      const passthrough =
+        type === "image/gif" ||
+        type === "image/svg+xml" ||
+        name.endsWith(".gif") ||
+        name.endsWith(".svg");
+      if (passthrough) {
+        resolve(file);
+        return;
+      }
+
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = function (event) {
@@ -970,14 +1341,26 @@ document.addEventListener("DOMContentLoaded", (event) => {
           const ctx = canvas.getContext("2d");
           ctx.drawImage(img, 0, 0, width, height);
 
+          const keepAlpha =
+            type === "image/png" ||
+            type === "image/webp" ||
+            name.endsWith(".png") ||
+            name.endsWith(".webp");
+          const outputType = keepAlpha ? "image/png" : "image/jpeg";
+
           canvas.toBlob(
             (blob) => {
+              if (!blob) {
+                reject(new Error("Could not compress image"));
+                return;
+              }
               resolve(blob);
             },
-            "image/jpeg",
-            quality
+            outputType,
+            keepAlpha ? undefined : quality
           );
         };
+        img.onerror = () => reject(new Error("Could not read image"));
       };
       reader.onerror = (error) => reject(error);
     });
@@ -988,7 +1371,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
    * @param {HTMLElement} element - The element to configure.
    */
   function openElementConfig(element) {
-    // Set the current element being configured
+    selectElement(element);
     currentConfigElement = element.id;
     const elementType = element.getAttribute("data-element-type");
     const config = elementConfigs[elementType];
@@ -1067,6 +1450,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
       } else if (option.type === "button") {
         // Create button input
         input = document.createElement("button");
+        input.type = "button";
         input.textContent = option.label;
         input.className =
           "mt-2 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500";
@@ -1086,6 +1470,11 @@ document.addEventListener("DOMContentLoaded", (event) => {
         input.name = option.name;
         input.className =
           "mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm";
+        if (option.name.endsWith("ApiKey")) {
+          input.type = "password";
+          input.autocomplete = "off";
+          input.spellcheck = false;
+        }
       }
 
       // Handle API key storage and display
@@ -1177,6 +1566,10 @@ document.addEventListener("DOMContentLoaded", (event) => {
           const apiKey = localStorage.getItem("openaiApiKey");
           const promptInput = document.getElementById("imagePrompt");
           if (config.onGenerate && apiKey && promptInput && promptInput.value) {
+            const element = document.getElementById(currentConfigElement);
+            if (element) {
+              element.setAttribute("data-image-prompt", promptInput.value);
+            }
             input.disabled = true;
             input.textContent = "Generating...";
             try {
@@ -1249,15 +1642,10 @@ document.addEventListener("DOMContentLoaded", (event) => {
    */
   confirmRemoveButton.addEventListener("click", () => {
     if (currentConfigElement) {
-      const elementToRemove = document.getElementById(currentConfigElement);
-      if (elementToRemove) {
-        elementToRemove.remove();
-        dispatchElementRemovedEvent(currentConfigElement);
-        togglePlaceholder();
-        modalSystem.closeModal(); // Close the confirm modal
-        modalSystem.closeModal(); // Close the element config modal
-        currentConfigElement = null;
-        pushState(); // Record state after element deletion
+      const element = document.getElementById(currentConfigElement);
+      if (element) {
+        selectElement(element);
+        deleteSelectedElement();
       }
     }
   });
@@ -1330,7 +1718,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
     const apiKeyElement = document.createElement("div");
     apiKeyElement.innerHTML = `
       <label for="${apiKeyName}" class="block text-sm font-medium text-gray-700">${apiKeyName.replace("ApiKey", " API Key")}</label>
-      <input type="text" id="${apiKeyName}" name="${apiKeyName}" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+      <input type="password" id="${apiKeyName}" name="${apiKeyName}" autocomplete="off" spellcheck="false" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
     `;
     apiKeyElement.querySelector("input").addEventListener(
       "input",
@@ -1423,7 +1811,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
       img.className = "w-full h-full object-cover pointer-events-none";
     }
     img.src = imageUrl;
-    img.alt = "AI Generated Image";
+    img.alt = element.getAttribute("data-image-prompt") || "AI Generated Image";
 
     // Clear the container and add the image
     container.innerHTML = "";
@@ -1543,8 +1931,9 @@ document.addEventListener("DOMContentLoaded", (event) => {
     const reader = new FileReader();
     reader.onload = async function (event) {
       try {
-        const appData = JSON.parse(event.target.result);
-        modalSystem.closeModal("loadModal");
+        const raw = JSON.parse(event.target.result);
+        const appData = parseGlitchGenFile(raw);
+        modalSystem.closeModal();
         await showLoadingAnimation();
         loadWebData(appData);
 
@@ -1557,6 +1946,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
         });
       } catch (error) {
         console.error("Error loading file:", error);
+        alert(formatGlitchGenError(error));
       }
     };
     reader.readAsText(file);
@@ -1575,24 +1965,30 @@ document.addEventListener("DOMContentLoaded", (event) => {
     );
     const background = dropZone.style.backgroundImage;
 
+    const safeTitle = escapeHtml(webTitle);
+    const safeColor = escapeHtml(textColor);
+    const stageW = Math.max(1, Math.round(dropZone.offsetWidth) || 1200);
+    const stageH = Math.max(1, Math.round(dropZone.offsetHeight) || 800);
+    const exportMode = normalizeMobileMode(mobileMode);
+
     let htmlContent = `
   <!DOCTYPE html>
-  <html lang="en">
+  <html lang="en" data-mobile-mode="${exportMode}">
   <head>
       <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>${webTitle}</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5">
+      <title>${safeTitle}</title>
       <!-- NOTE: These stylesheets depend on the external domain websites.glitchgen.ai.
            Exported HTML requires internet access to load these styles correctly. -->
       <link rel="stylesheet" href="https://websites.glitchgen.ai/css/styles.css">
       <link rel="stylesheet" href="https://websites.glitchgen.ai/css/styles_websites.css">
       <link rel="stylesheet" href="https://websites.glitchgen.ai/css/animate.min.css">
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-      <link href="https://fonts.googleapis.com/css2?family=Roboto&family=Open+Sans&family=Lato&family=Montserrat&family=Playfair+Display&family=Merriweather&family=Nunito&family=Raleway&family=Poppins&family=Ubuntu&display=swap" rel="stylesheet">
+      <link rel="stylesheet" href="${GOOGLE_FONTS_HREF}">
       <style>
           body {
-              font-family: '${font}', sans-serif;
-              color: ${textColor};
+              font-family: ${cssFontFamily(font)};
+              color: ${safeColor};
               margin: 0;
               padding: 0;
           }
@@ -1601,22 +1997,14 @@ document.addEventListener("DOMContentLoaded", (event) => {
               background-size: auto;
               background-repeat: repeat;
               background-position: center;
-              min-height: 100vh;
               position: relative;
               margin: 0 auto;
           }
-          .exported-element {
-              position: absolute;
-              overflow: hidden;
-          }
-          .exported-element img {
-              width: 100%;
-              height: 100%;
-              object-fit: cover;
-          }
+          ${getMobileExportCss(stageW, stageH)}
       </style>
   </head>
   <body>
+      <div id="stage-scroll">
       <div id="app-container">
   `;
 
@@ -1636,7 +2024,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
         const img = element.querySelector("img");
         if (img && img.src) {
           const fitStyle = img.style.objectFit || "cover";
-          elementContent = `<img src="${img.src}" alt="${img.alt || ""}" style="width: 100%; height: 100%; object-fit: ${fitStyle};">`;
+          elementContent = `<img src="${escapeHtml(img.src)}" alt="${escapeHtml(img.alt || "")}" style="width: 100%; height: 100%; object-fit: ${escapeHtml(fitStyle)};">`;
         }
       }
 
@@ -1651,8 +2039,24 @@ document.addEventListener("DOMContentLoaded", (event) => {
       });
       elementContent = tempDiv.innerHTML;
 
+      const vars = [
+        `--el-left:${escapeHtml(element.style.left || "0%")}`,
+        `--el-top:${escapeHtml(element.style.top || "0%")}`,
+        `--el-width:${escapeHtml(element.style.width || "10%")}`,
+        `--el-height:${escapeHtml(element.style.height || "10%")}`,
+      ];
+      if (element.style.minWidth) {
+        vars.push(`--el-min-w:${escapeHtml(element.style.minWidth)}`);
+      }
+      if (element.style.minHeight) {
+        vars.push(`--el-min-h:${escapeHtml(element.style.minHeight)}`);
+      }
+      if (element.style.zIndex) {
+        vars.push(`--el-z:${escapeHtml(element.style.zIndex)}`);
+      }
+
       htmlContent += `
-          <div class="exported-element" style="left: ${element.style.left}; top: ${element.style.top}; width: ${element.style.width}; height: ${element.style.height}; min-width: ${element.style.minWidth}; min-height: ${element.style.minHeight}; z-index: ${element.style.zIndex};">
+          <div class="exported-element" style="${vars.join(";")}">
               ${elementContent}
           </div>
       `;
@@ -1660,8 +2064,11 @@ document.addEventListener("DOMContentLoaded", (event) => {
 
     htmlContent += `
       </div>
-      <footer class="fixed bottom-0 left-0 right-0 bg-gray-100 py-2 px-4 shadow-md glitchgen-footer">
-        <div class="container mx-auto flex items-center justify-center text-sm">
+      </div>
+      <footer class="glitchgen-footer">
+        <div class="gg-footer-inner">
+          ${getMobileModeToggleHtml()}
+          <div class="gg-credit">
           <span class="mr-2 text-blue-600">Created with ❤️ on</span>
           <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mr-2" viewbox="0 0 24 24">
             <defs>
@@ -1687,8 +2094,17 @@ document.addEventListener("DOMContentLoaded", (event) => {
             <rect x="7" y="20" width="10" height="2" fill="#808080"></rect>
           </svg>
           <a href="https://glitchgen.ai" class="text-blue-600 hover:text-blue-800 transition-colors duration-200">GlitchGen</a>
+          </div>
         </div>
       </footer>
+      ${getMobileExportScript(exportMode, stageW, stageH)}
+      ${
+        elements.some(
+          (el) => el.getAttribute("data-element-type") === "Music Box"
+        )
+          ? getMusicBoxExportScript()
+          : ""
+      }
   </body>
   </html>
     `;
@@ -1697,7 +2113,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "website.html";
+    a.download = toDownloadName(webTitle, "html");
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -1747,12 +2163,14 @@ document.addEventListener("DOMContentLoaded", (event) => {
    */
   function loadWebData(appData, options = {}) {
     highestZIndex = 1000;
+    selectElement(null);
     clearCanvasElements();
 
     // Set web configuration
     webTitle.textContent = appData.title || "Your Website";
     GRID_SIZE = appData.gridSize || 20;
-    document.getElementById("fontSelect").value = appData.font || "Roboto";
+    applySavedFont(appData.font || DEFAULT_FONT);
+    applyMobileMode(appData.mobileMode);
     document.getElementById("textColorInput").value =
       appData.textColor || "#000000";
 
@@ -1864,8 +2282,11 @@ document.addEventListener("DOMContentLoaded", (event) => {
    * @returns {HTMLElement} The newly created element.
    */
   function createElementByType(type, properties = {}) {
+    ensureCanvasVisible();
     const wrapper = document.createElement("div");
-    wrapper.style.fontFamily = document.getElementById("fontSelect").value;
+    wrapper.style.fontFamily = cssFontFamily(
+      document.getElementById("fontSelect").value
+    );
     wrapper.classList.add(
       "bg-white",
       "p-2",
@@ -1939,35 +2360,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
 
     const elementType = e.dataTransfer.getData("text");
     if (elementType) {
-      const newElement = createElementByType(elementType);
-      addDragFunctionality(newElement);
-      const dropZoneRect = dropZone.getBoundingClientRect();
-
-      // Calculate position as percentage
-      const leftPercent =
-        ((e.clientX - dropZoneRect.left) / dropZoneRect.width) * 100;
-      const topPercent =
-        ((e.clientY - dropZoneRect.top) / dropZoneRect.height) * 100;
-
-      // Snap to grid (you may want to adjust this for percentage-based positioning)
-      const snappedLeftPercent =
-        Math.round(leftPercent / ((GRID_SIZE / dropZoneRect.width) * 100)) *
-        ((GRID_SIZE / dropZoneRect.width) * 100);
-      const snappedTopPercent =
-        Math.round(topPercent / ((GRID_SIZE / dropZoneRect.height) * 100)) *
-        ((GRID_SIZE / dropZoneRect.height) * 100);
-
-      newElement.style.left = `${snappedLeftPercent}%`;
-      newElement.style.top = `${snappedTopPercent}%`;
-
-      assignHighestZIndex(newElement);
-
-      dropZone.appendChild(newElement);
-      addResize(newElement);
-      togglePlaceholder();
-
-      dispatchElementAddedEvent(newElement.id);
-      pushState(); // Record state after element creation
+      placeNewElementAtPoint(elementType, e.clientX, e.clientY);
     }
   }
 
@@ -2030,6 +2423,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
    * @param {Event} e - The click event.
    */
   function handleElementClick(e) {
+    if (isInteractiveTarget(e.target)) return;
     if (dragDropManager.hasDragged) {
       dragDropManager.hasDragged = false;
       return;
@@ -2046,6 +2440,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
     }
 
     e.stopPropagation();
+    selectElement(this);
     openElementConfig(this);
   }
 
@@ -2195,13 +2590,44 @@ document.addEventListener("DOMContentLoaded", (event) => {
   }
 
   /**
+   * Sets the exported phone layout and syncs the config radios.
+   * @param {unknown} value
+   */
+  function applyMobileMode(value) {
+    mobileMode = normalizeMobileMode(value);
+    document.querySelectorAll('input[name="mobileMode"]').forEach((input) => {
+      input.checked = input.value === mobileMode;
+    });
+  }
+
+  /**
+   * Selects a saved font, adding a one-off option for names no longer in the picker.
+   * @param {string} fontFamily
+   */
+  function applySavedFont(fontFamily) {
+    const select = document.getElementById("fontSelect");
+    if (select && ![...select.options].some((option) => option.value === fontFamily)) {
+      const option = document.createElement("option");
+      option.value = fontFamily;
+      option.textContent = `${fontFamily} (from file)`;
+      select.appendChild(option);
+    }
+    if (select) {
+      select.value = fontFamily;
+      select.style.fontFamily = cssFontFamily(fontFamily);
+    }
+    updateFont(fontFamily);
+  }
+
+  /**
    * Updates the font family for all draggable elements.
    * @param {string} fontFamily - The font family to apply.
    */
   function updateFont(fontFamily) {
+    const stack = cssFontFamily(fontFamily);
     const elements = document.querySelectorAll(".draggable-element");
     elements.forEach((elem) => {
-      elem.style.fontFamily = fontFamily;
+      elem.style.fontFamily = stack;
     });
   }
 
@@ -2216,6 +2642,9 @@ document.addEventListener("DOMContentLoaded", (event) => {
     if (config && typeof config.onResize === "function") {
       config.onResize(element);
     }
+    modalSystem.closeModal();
+    markUnsavedChanges();
+    pushState();
   });
 
   /**
@@ -2225,7 +2654,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
   confirmModal.addEventListener("click", (e) => {
     if (e.target === confirmModal) {
       elementToRemove = null;
-      confirmModal.classList.add("hidden");
+      modalSystem.closeModal();
     }
   });
 
@@ -2239,6 +2668,38 @@ document.addEventListener("DOMContentLoaded", (event) => {
 
   populateElementsList();
   populateBgOptions();
+
+  dropZone.addEventListener("elementSelected", (event) => {
+    selectElement(event.detail.element);
+  });
+
+  dropZone.addEventListener("click", (event) => {
+    if (
+      event.target === dropZone ||
+      event.target.id === "placeholder" ||
+      event.target.closest("#placeholder")
+    ) {
+      selectElement(null);
+    }
+  });
+
+  const minimizeCanvasBtn = document.getElementById("minimizeCanvas");
+  const closeCanvasBtn = document.getElementById("closeCanvas");
+  const mainCanvas = document.getElementById("main-canvas");
+  if (minimizeCanvasBtn && mainCanvas) {
+    minimizeCanvasBtn.addEventListener("click", () => {
+      const minimized = mainCanvas.classList.toggle("canvas-minimized");
+      minimizeCanvasBtn.setAttribute("aria-pressed", minimized ? "true" : "false");
+      const label = minimized ? "Restore canvas" : "Minimize canvas";
+      minimizeCanvasBtn.setAttribute("aria-label", label);
+      minimizeCanvasBtn.title = label;
+    });
+  }
+  if (closeCanvasBtn) {
+    closeCanvasBtn.addEventListener("click", () =>
+      modalSystem.openModal("newWebsiteModal")
+    );
+  }
 
   /**
    * Event listener for submitting the element configuration form.

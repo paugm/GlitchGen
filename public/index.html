@@ -8,7 +8,6 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/emoji-mart@latest/css/emoji-mart.css" />
-        <link href="https://fonts.googleapis.com/css2?family=Roboto&family=Open+Sans&family=Lato&family=Montserrat&family=Playfair+Display&family=Merriweather&family=Nunito&family=Raleway&family=Poppins&family=Ubuntu&display=swap" rel="stylesheet">
         <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
         <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png">
         <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png">
@@ -72,7 +71,7 @@
                             <i class="fas fa-file w-4 h-4 mr-2"></i>
                             New Website
                         </li>
-                        <li class="bg-gray-100 p-2 rounded shadow cursor-pointer hover:bg-gray-200 transition-colors flex items-center text-sm" id="saveWeb">
+                        <li class="bg-gray-100 p-2 rounded shadow cursor-pointer hover:bg-gray-200 transition-colors flex items-center text-sm" id="saveWeb" title="Save (Ctrl+S / Cmd+S)">
                             <i class="fas fa-download w-4 h-4 mr-2"></i>
                             Save Website
                         </li>
@@ -85,10 +84,10 @@
                             Export Website
                         </li>
                         <li class="flex items-center space-x-2 mt-2">
-                            <button id="undoButton" class="flex-1 bg-gray-100 p-2 rounded shadow cursor-pointer hover:bg-gray-200 transition-colors flex items-center justify-center text-sm" style="opacity: 0.4;" title="Undo (Ctrl+Z)">
+                            <button id="undoButton" class="flex-1 bg-gray-100 p-2 rounded shadow cursor-pointer hover:bg-gray-200 transition-colors flex items-center justify-center text-sm" style="opacity: 0.4;" title="Undo (Ctrl+Z / Cmd+Z)">
                                 <i class="fas fa-undo w-4 h-4 mr-1"></i> Undo
                             </button>
-                            <button id="redoButton" class="flex-1 bg-gray-100 p-2 rounded shadow cursor-pointer hover:bg-gray-200 transition-colors flex items-center justify-center text-sm" style="opacity: 0.4;" title="Redo (Ctrl+Y)">
+                            <button id="redoButton" class="flex-1 bg-gray-100 p-2 rounded shadow cursor-pointer hover:bg-gray-200 transition-colors flex items-center justify-center text-sm" style="opacity: 0.4;" title="Redo (Ctrl+Y / Cmd+Shift+Z)">
                                 <i class="fas fa-redo w-4 h-4 mr-1"></i> Redo
                             </button>
                         </li>
@@ -137,29 +136,29 @@
             </div>
         </div>
         <!-- Main Content -->
-        <div class="bg-card-bg shadow-xl rounded-lg flex-grow h-[97vh] flex flex-col overflow-hidden">
+        <div id="main-canvas" class="bg-card-bg shadow-xl rounded-lg flex-grow h-[97vh] flex flex-col overflow-hidden">
             <div class="bg-header-bg border-b border-border p-4 flex items-center justify-between rounded-t-lg">
                 <div class="w-24"></div>
                 <!-- Spacer -->
                 <h1 class="text-xl font-semibold cursor-pointer hover:text-indigo-600 transition-colors flex items-center">
                     <span id="webTitle">Your Website</span>
-                    <span id="openAppConfig" class="ml-2">
-                        <i class="fas fa-cog h-5 w-5 cursor-pointer"></i>
-                    </span>
+                    <button type="button" id="openAppConfig" class="ml-2" aria-label="Website settings">
+                        <i class="fas fa-cog h-5 w-5 cursor-pointer" aria-hidden="true"></i>
+                    </button>
                 </h1>
                 <div class="flex space-x-2">
-                    <button id="bgConfigButton" class="p-1 rounded-full hover:bg-gray-200">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <button id="bgConfigButton" type="button" class="p-1 rounded-full hover:bg-gray-200" aria-label="Choose background" title="Choose background">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                     </button>
-                    <button class="text-gray-600 hover:text-gray-800">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewbox="0 0 24 24" stroke="currentColor">
+                    <button id="minimizeCanvas" type="button" class="text-gray-600 hover:text-gray-800 p-1 rounded-full hover:bg-gray-200" aria-label="Minimize canvas" aria-pressed="false" title="Minimize canvas">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewbox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
                         </svg>
                     </button>
-                    <button class="text-gray-600 hover:text-gray-800">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewbox="0 0 24 24" stroke="currentColor">
+                    <button id="closeCanvas" type="button" class="text-gray-600 hover:text-gray-800 p-1 rounded-full hover:bg-gray-200" aria-label="Close website" title="Close website">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewbox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
@@ -243,7 +242,7 @@
                     <h3 class="mt-5 text-lg leading-6 font-medium text-gray-900 text-center">Remove Element</h3>
                     <div class="mt-2 px-7 py-3">
                         <p class="text-sm text-gray-500 text-center">
-                            Are you sure you want to remove this element? This action cannot be undone.
+                            Are you sure you want to remove this element? You can undo this.
                         </p>
                     </div>
                     <div class="flex justify-center mt-5">
@@ -259,7 +258,7 @@
         </div>
         <!-- App Configuration Modal -->
         <div id="configModal" class="modal-window fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden flex items-center justify-center">
-            <div class="relative p-5 border w-4/12 shadow-lg rounded-lg bg-white modal-content">
+            <div class="relative p-5 border w-11/12 max-w-lg shadow-lg rounded-lg bg-white modal-content">
                 <h2 class="text-2xl font-bold mb-6 text-gray-800">Web Configuration</h2>
                 <form id="configForm">
                     <div class="space-y-6">
@@ -272,19 +271,43 @@
                             <input type="range" id="gridSizeInput" name="gridSize" min="5" max="50" value="20" class="mt-1 block w-full">
                             <span id="gridSizeValue" class="text-sm text-gray-500">20px</span>
                         </div>
+                        <fieldset>
+                            <legend class="block text-sm font-medium text-gray-700">On phones</legend>
+                            <p class="text-xs text-gray-500 mt-1 mb-3">Exported sites used to dump every widget into a column. Pick how phones should see this homepage.</p>
+                            <div class="space-y-2">
+                                <label class="flex items-start gap-2 p-2 border border-gray-200 rounded-md cursor-pointer hover:bg-gray-50">
+                                    <input type="radio" name="mobileMode" value="shrink" class="mt-1" checked>
+                                    <span>
+                                        <span class="block text-sm font-medium text-gray-800">Shrink the stage</span>
+                                        <span class="block text-xs text-gray-500">Keep the collage. Scale the whole layout to the screen.</span>
+                                    </span>
+                                </label>
+                                <label class="flex items-start gap-2 p-2 border border-gray-200 rounded-md cursor-pointer hover:bg-gray-50">
+                                    <input type="radio" name="mobileMode" value="zoom" class="mt-1">
+                                    <span>
+                                        <span class="block text-sm font-medium text-gray-800">Pinch-zoom</span>
+                                        <span class="block text-xs text-gray-500">Original stage. Pan and pinch like a desktop site.</span>
+                                    </span>
+                                </label>
+                                <label class="flex items-start gap-2 p-2 border border-gray-200 rounded-md cursor-pointer hover:bg-gray-50">
+                                    <input type="radio" name="mobileMode" value="stack" class="mt-1">
+                                    <span>
+                                        <span class="block text-sm font-medium text-gray-800">Stack</span>
+                                        <span class="block text-xs text-gray-500">One column. Readable, but the layout is gone.</span>
+                                    </span>
+                                </label>
+                            </div>
+                        </fieldset>
                         <div>
                             <label for="fontSelect" class="block text-sm font-medium text-gray-700">Font</label>
                             <select id="fontSelect" name="font" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                                <option value="Roboto" class="font-roboto">Roboto</option>
-                                <option value="Open Sans" class="font-opensans">Open Sans</option>
-                                <option value="Lato" class="font-lato">Lato</option>
-                                <option value="Montserrat" class="font-montserrat">Montserrat</option>
-                                <option value="Playfair Display" class="font-playfair">Playfair Display</option>
-                                <option value="Merriweather" class="font-merriweather">Merriweather</option>
-                                <option value="Nunito" class="font-nunito">Nunito</option>
-                                <option value="Raleway" class="font-raleway">Raleway</option>
-                                <option value="Poppins" class="font-poppins">Poppins</option>
-                                <option value="Ubuntu" class="font-ubuntu">Ubuntu</option>
+                                <option value="VT323">VT323</option>
+                                <option value="Press Start 2P">Press Start 2P</option>
+                                <option value="Comic Neue">Comic Neue</option>
+                                <option value="Comic Sans MS">Comic Sans MS</option>
+                                <option value="Silkscreen">Silkscreen</option>
+                                <option value="Special Elite">Special Elite</option>
+                                <option value="Impact">Impact</option>
                             </select>
                         </div>
                         <div>

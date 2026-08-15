@@ -18,16 +18,24 @@
   "license": "MIT",
   "devDependencies": {
     "autoprefixer": "^10.5.4",
+    "css-loader": "^7.1.4",
     "postcss": "^8.5.26",
     "prettier": "^3.9.6",
+    "style-loader": "^4.0.0",
     "tailwindcss": "^3.4.19",
     "webpack": "^5.109.2",
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
+    "@fontsource/comic-neue": "^5.3.0",
+    "@fontsource/press-start-2p": "^5.3.0",
+    "@fontsource/silkscreen": "^5.3.0",
+    "@fontsource/special-elite": "^5.3.0",
+    "@fontsource/vt323": "^5.3.0",
     "dompurify": "^3.4.13",
     "emoji-mart": "^5.6.0",
     "gsap": "^3.15.0",
-    "idb-keyval": "6.3.0"
+    "idb-keyval": "6.3.0",
+    "zod": "^4.4.3"
   }
 }

@@ -1,17 +1,33 @@
-const path = require('path');
+const path = require("path");
 
 module.exports = {
-  entry: './src/js/builder.js',
+  entry: "./src/js/builder.js",
   output: {
-    filename: 'builder.js',
-    path: path.resolve(__dirname, 'public/js'),
+    filename: "builder.js",
+    path: path.resolve(__dirname, "public/js"),
+    publicPath: "auto",
   },
   resolve: {
-    extensions: ['.js', '.json'],
+    extensions: [".js", ".json"],
     alias: {
-      '@': path.resolve(__dirname, 'src'),
+      "@": path.resolve(__dirname, "src"),
     },
   },
-  mode: 'production',
-  devtool: 'source-map'
+  module: {
+    rules: [
+      {
+        test: /\.css$/i,
+        use: ["style-loader", "css-loader"],
+      },
+      {
+        test: /\.(woff2?|eot|ttf|otf)$/i,
+        type: "asset/resource",
+        generator: {
+          filename: "../fonts/[name][ext]",
+        },
+      },
+    ],
+  },
+  mode: "production",
+  devtool: "source-map",
 };

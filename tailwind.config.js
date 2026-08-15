@@ -18,7 +18,7 @@ module.exports = {
         sidebar: "0 0 15px rgba(0, 0, 0, 0.1)",
       },
       fontFamily: {
-        sans: ["Poppins", "sans-serif"],
+        sans: ["Poppins", "system-ui", "sans-serif"],
       },
       animation: {
         rainbow: "rainbow 5s ease infinite",

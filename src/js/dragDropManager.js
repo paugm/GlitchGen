@@ -1,3 +1,17 @@
+export const INTERACTIVE_SELECTOR =
+  "button, a, iframe, input, textarea, select, label, audio, video, .play-button-trigger";
+
+/**
+ * True when a pointer event hit a control that should keep its native click.
+ * @param {EventTarget|null} target
+ * @returns {boolean}
+ */
+export function isInteractiveTarget(target) {
+  return (
+    target instanceof Element && Boolean(target.closest(INTERACTIVE_SELECTOR))
+  );
+}
+
 export class DragDropManager {
   constructor(dropZone, gridSize, assignHighestZIndex) {
     this.dropZone = dropZone;
@@ -33,6 +47,7 @@ export class DragDropManager {
    * @param {HTMLElement} element - The element being dragged.
    */
   startDragging(e, element) {
+    if (isInteractiveTarget(e.target)) return;
     e.preventDefault();
     this.isDragging = true;
     this.currentElement = element;
@@ -62,6 +77,9 @@ export class DragDropManager {
 
     // Bring the element to the top
     this.assignHighestZIndex(this.currentElement);
+    this.dropZone.dispatchEvent(
+      new CustomEvent("elementSelected", { detail: { element } })
+    );
   }
 
   /**

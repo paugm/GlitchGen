@@ -46,6 +46,13 @@
         @apply w-5 h-5 mr-2;
     }
 
+    #textElements li:focus-visible,
+    #mediaElements li:focus-visible,
+    #interactiveElements li:focus-visible,
+    #layoutElements li:focus-visible {
+        @apply outline outline-2 outline-offset-2 outline-indigo-500;
+    }
+
     .button-style-3 {
         @apply bg-blue-600 text-white border-4 border-black px-4 py-2 no-underline 
       shadow-[5px_5px_0_#000] transition-all duration-100 ease-in-out;
@@ -147,11 +154,25 @@
 }
 
 body {
-    font-family: "Playfair Display", sans-serif;
+    font-family: system-ui, sans-serif;
 }
 
 .draggable-element {
     position: absolute;
+}
+
+.draggable-element.is-selected {
+    outline: 2px solid var(--theme-color);
+    outline-offset: 2px;
+}
+
+#main-canvas.canvas-minimized {
+    height: auto !important;
+}
+
+#main-canvas.canvas-minimized #drop-zone,
+#main-canvas.canvas-minimized .glitchgen-footer {
+    display: none;
 }
 
 .resizer {
@@ -177,35 +198,26 @@ body {
 .modal-content {
     animation: modalFadeIn 0.3s ease-out;
 }
-.font-roboto {
-    font-family: "Roboto", sans-serif;
+.font-vt323 {
+    font-family: VT323, monospace;
 }
-.font-opensans {
-    font-family: "Open Sans", sans-serif;
+.font-press-start {
+    font-family: "Press Start 2P", cursive;
 }
-.font-lato {
-    font-family: "Lato", sans-serif;
+.font-comic-neue {
+    font-family: "Comic Neue", "Comic Sans MS", cursive;
 }
-.font-montserrat {
-    font-family: "Montserrat", sans-serif;
+.font-comic-sans {
+    font-family: "Comic Sans MS", "Comic Neue", cursive;
 }
-.font-playfair {
-    font-family: "Playfair Display", serif;
+.font-silkscreen {
+    font-family: Silkscreen, sans-serif;
 }
-.font-merriweather {
-    font-family: "Merriweather", serif;
+.font-special-elite {
+    font-family: "Special Elite", serif;
 }
-.font-nunito {
-    font-family: "Nunito", sans-serif;
-}
-.font-raleway {
-    font-family: "Raleway", sans-serif;
-}
-.font-poppins {
-    font-family: "Poppins", sans-serif;
-}
-.font-ubuntu {
-    font-family: "Ubuntu", sans-serif;
+.font-impact {
+    font-family: Impact, Haettenschweiler, "Arial Black", sans-serif;
 }
 
 #elementsList li {

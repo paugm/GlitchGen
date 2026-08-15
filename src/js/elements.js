@@ -1,6 +1,46 @@
 import DOMPurify from "dompurify";
 import { Picker } from "emoji-mart";
+import { bindMusicBox } from "./musicBox";
 export const version_elements = "1.7";
+
+const IFRAME_SANDBOX =
+  "allow-scripts allow-popups allow-forms allow-popups-to-escape-sandbox";
+
+/**
+ * Escapes text for safe insertion into HTML.
+ * @param {unknown} value
+ * @returns {string}
+ */
+export function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/**
+ * Accepts only http(s) URLs for iframes (blocks javascript:, data:, etc.).
+ * @param {unknown} url
+ * @returns {string|null}
+ */
+function toSafeHttpUrl(url) {
+  if (!url || typeof url !== "string") return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+  try {
+    const parsed = new URL(
+      trimmed.includes("://") ? trimmed : `https://${trimmed}`
+    );
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return null;
+    }
+    return parsed.href;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Extracts a YouTube video ID from watch, share, shorts, live, and embed URLs.
@@ -619,7 +659,7 @@ const elementConfigs = {
     configOptions: [
       {
         name: "unsplashApiKey",
-        type: "text",
+        type: "password",
         label: "Optional: Unsplash API Key",
         helpText: "How to get an API Key",
         helpLink:
@@ -659,7 +699,6 @@ const elementConfigs = {
         element.querySelector("img")?.alt ||
         element.querySelector("div")?.textContent?.trim() ||
         "",
-      unsplashApiKey: localStorage.getItem("unsplashApiKey") || "",
       imageSearch: element.getAttribute("data-image-search") || "",
     }),
     setProperties: (element, properties) => {
@@ -678,17 +717,18 @@ const elementConfigs = {
       } else if (properties.alt) {
         container.textContent = properties.alt;
       }
-      if (properties.unsplashApiKey) {
-        localStorage.setItem("unsplashApiKey", properties.unsplashApiKey);
-      }
       if (properties.imageSearch) {
         element.setAttribute("data-image-search", properties.imageSearch);
       }
     },
     onSearch: async (searchTerm, apiKey, updateImage) => {
       try {
+        const params = new URLSearchParams({
+          query: searchTerm,
+          client_id: apiKey,
+        });
         const response = await fetch(
-          `https://api.unsplash.com/photos/random?query=${searchTerm}&client_id=${apiKey}`
+          `https://api.unsplash.com/photos/random?${params}`
         );
         const data = await response.json();
         if (data.urls && data.urls.regular) {
@@ -706,12 +746,16 @@ const elementConfigs = {
       const searchTerm = element.getAttribute("data-image-search");
       if (apiKey && searchTerm) {
         try {
+          const params = new URLSearchParams({
+            query: searchTerm,
+            client_id: apiKey,
+          });
           const response = await fetch(
-            `https://api.unsplash.com/photos/random?query=${searchTerm}&client_id=${apiKey}`
+            `https://api.unsplash.com/photos/random?${params}`
           );
           const data = await response.json();
           if (data.urls && data.urls.regular) {
-            element.innerHTML = `<img src="${data.urls.regular}" alt="${searchTerm}" class="w-full h-full object-cover pointer-events-none">`;
+            element.innerHTML = `<img src="${escapeHtml(data.urls.regular)}" alt="${escapeHtml(searchTerm)}" class="w-full h-full object-cover pointer-events-none">`;
           }
         } catch (error) {
           console.error("Error loading image:", error);
@@ -782,7 +826,7 @@ const elementConfigs = {
 
       table.innerHTML = `
             <tr>${headers
-              .map((h) => `<th class="border p-2">${h}</th>`)
+              .map((h) => `<th class="border p-2">${escapeHtml(h)}</th>`)
               .join("")}</tr>
             ${rows
               .map(
@@ -791,7 +835,10 @@ const elementConfigs = {
                 alternateRowColor && index % 2 !== 0 ? "alternate-row" : ""
               }">
                 ${row
-                  .map((cell) => `<td class="border p-2">${cell}</td>`)
+                  .map(
+                    (cell) =>
+                      `<td class="border p-2">${escapeHtml(cell)}</td>`
+                  )
                   .join("")}
               </tr>
             `
@@ -856,7 +903,7 @@ const elementConfigs = {
         const listClass =
           properties.type === "ordered" ? "list-decimal" : "list-disc";
         element.innerHTML = `<${listType} class="${listClass} pl-5 pointer-events-none w-full h-full">
-            ${items.map((item) => `<li>${item}</li>`).join("")}
+            ${items.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}
           </${listType}>`;
       }
     },
@@ -917,7 +964,7 @@ const elementConfigs = {
     configOptions: [
       {
         name: "giphyApiKey",
-        type: "text",
+        type: "password",
         label: "Giphy API Key",
         helpText: "How to get an API Key",
         helpLink:
@@ -938,15 +985,11 @@ const elementConfigs = {
     ],
     getProperties: (element) => ({
       gifUrl: element.querySelector("img").src,
-      giphyApiKey: element.getAttribute("data-giphy-api-key") || "",
       giphySearch: element.getAttribute("data-giphy-search") || "",
     }),
     setProperties: (element, properties) => {
       if (properties.gifUrl) {
         element.querySelector("img").src = properties.gifUrl;
-      }
-      if (properties.giphyApiKey) {
-        element.setAttribute("data-giphy-api-key", properties.giphyApiKey);
       }
       if (properties.giphySearch) {
         element.setAttribute("data-giphy-search", properties.giphySearch);
@@ -959,8 +1002,13 @@ const elementConfigs = {
       }
 
       try {
+        const params = new URLSearchParams({
+          api_key: apiKey,
+          q: searchTerm,
+          limit: "12",
+        });
         const response = await fetch(
-          `https://api.giphy.com/v1/gifs/search?api_key=${apiKey}&q=${searchTerm}&limit=12`
+          `https://api.giphy.com/v1/gifs/search?${params}`
         );
         const data = await response.json();
         const gifs = data.data.map((gif) => ({
@@ -986,8 +1034,13 @@ const elementConfigs = {
       const searchTerm = element.getAttribute("data-giphy-search");
       if (apiKey && searchTerm) {
         try {
+          const params = new URLSearchParams({
+            api_key: apiKey,
+            q: searchTerm,
+            limit: "1",
+          });
           const response = await fetch(
-            `https://api.giphy.com/v1/gifs/search?api_key=${apiKey}&q=${searchTerm}&limit=1`
+            `https://api.giphy.com/v1/gifs/search?${params}`
           );
           const data = await response.json();
           if (data.data && data.data[0]) {
@@ -1005,113 +1058,10 @@ const elementConfigs = {
     innerHTML: `
     <div class="music-box w-full h-full rounded-lg shadow-lg flex flex-col items-center justify-center p-4 bg-gradient-to-br from-amber-200 to-yellow-400 text-amber-800">
       <h3 class="text-xl font-bold mb-2 song-title">Music Box!</h3>
-      <button class="play-button-trigger play-button bg-opacity-50 hover:bg-opacity-75 font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-105" data-song="starwars">
-        <i class="fas fa-play mr-2"></i>Play
+      <button type="button" class="play-button-trigger play-button bg-opacity-50 hover:bg-opacity-75 font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-105" data-song="starwars">
+        <i class="fas fa-play mr-2" aria-hidden="true"></i>Play
       </button>
     </div>
-    <script>
-      (function() {
-        const playButton = document.currentScript.previousElementSibling.querySelector('.play-button-trigger');
-        const songTitle = document.currentScript.previousElementSibling.querySelector('.song-title');
-        let isPlaying = false;
-        let currentAudio = null;
-         
-        const melodies = {
-          starwars: "G4,0.4,G4,0.4,G4,0.4,E5,0.8,C5,0.8,G5,0.8,F5,0.4,E5,0.4,D5,0.4,C6,1.2,G5,0.8,F5,0.4,E5,0.4,D5,0.4,C6,1.2,G5,0.8,F5,0.4,E5,0.4,F5,0.4,D5,1.2",
-          harrypotter: "B3,0.4,E4,0.6,G4,0.4,F#4,0.8,E4,1.2,B4,0.4,A4,0.6,F#4,1.4,E4,0.4,G4,0.4,F#4,0.8,D4,0.8,F4,0.4,B3,1.4",
-          jamesbond: "E4,0.1,F#4,0.2,F#4,0.2,F#4,0.2,F#4,0.4,F#4,0.2,F#4,0.2,F#4,0.2,G#4,0.2,G#4,0.2,G#4,0.2,G#4,0.4,G#4,0.2,G#4,0.2,G#4,0.2,F#4,0.8,F#4,0.2,F#4,0.2,F#4,0.4,F#4,0.2,F#4,0.2,E4,0.8,E4,0.2,E4,0.2,E4,0.4,E4,0.2,E4,0.2",
-          indianajones: "E4,0.4,F4,0.4,G4,0.4,C5,1.2,B4,0.4,A4,0.4,G4,0.4,F4,0.4,E4,0.4,C4,1.2,E4,0.4,F4,0.4,G4,0.4,C5,1.2,B4,0.4,A4,0.4,G4,0.4,F4,0.4,E4,0.4,C4,1.2",
-          jurassicpark: "C4,0.8,D4,0.4,C4,0.4,G4,1.4,F4,1.4,C4,0.8,D4,0.4,C4,0.4,A#4,1.4,A4,0.8,G4,0.8,C5,1.4,C4,1.4",
-          pirates: "D4,0.4,D5,0.4,D5,0.4,G4,0.8,A4,0.8,B4,0.4,C5,0.4,D5,0.4,E5,0.4,F#5,0.8,G5,0.8,A5,0.8,D5,0.8,C5,0.8,B4,0.4,A4,0.4",
-          mario: "E5,0.3,E5,0.3,0,0.3,E5,0.3,0,0.3,C5,0.3,E5,0.3,G5,0.6,0,0.6,G4,0.3,0,0.3,C5,0.3,G4,0.3,E4,0.3,0,0.3,A4,0.3,B4,0.3,Bb4,0.3,A4,0.6",
-          zelda: "G4,0.4,A4,0.4,B4,0.4,C5,1.2,D5,0.4,E5,0.4,F5,0.4,G5,1.2,G5,0.4,F5,0.4,E5,0.4,D5,0.4,C5,0.4,B4,0.4,A4,0.4,G4,1.4",
-          tetris: "E5,0.3,B4,0.3,C5,0.3,D5,0.3,C5,0.3,B4,0.3,A4,0.3,A4,0.3,C5,0.3,E5,0.3,D5,0.3,C5,0.3,B4,0.3,C5,0.3,D5,0.3,E5,0.3,C5,0.3,A4,0.3,A4,0.3"          
-      };
-
-        function playMelody(notes) {
-          if (currentAudio) {
-            currentAudio.pause();
-          }
-
-          const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-          const oscillator = audioContext.createOscillator();
-          const gainNode = audioContext.createGain();
-
-          oscillator.connect(gainNode);
-          gainNode.connect(audioContext.destination);
-
-          oscillator.type = "sine";
-          gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-
-          const noteFrequencies = {
-            C4: 261.63, D4: 293.66, E4: 329.63, F4: 349.23,
-            G4: 392.0, A4: 440.0, B4: 493.88, C5: 523.25,
-            D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99,
-            A5: 880.0, B5: 987.77, C6: 1046.5, "F#4": 369.99,
-            "G#4": 415.3, "A#4": 466.16
-          };
-
-          let time = audioContext.currentTime;
-          const notesArray = notes.split(',');
-
-          for (let i = 0; i < notesArray.length; i += 2) {
-            const note = notesArray[i].trim();
-            const duration = parseFloat(notesArray[i + 1]);
-            const frequency = noteFrequencies[note];
-
-            if (frequency) {
-              oscillator.frequency.setValueAtTime(frequency, time);
-              gainNode.gain.setValueAtTime(0, time);
-              gainNode.gain.linearRampToValueAtTime(0.5, time + 0.01);
-              gainNode.gain.linearRampToValueAtTime(0, time + duration - 0.01);
-              time += duration;
-            }
-          }
-
-          oscillator.start();
-          oscillator.stop(time);
-
-          currentAudio = {
-            pause: () => {
-              oscillator.stop();
-              audioContext.close();
-            },
-          };
-
-          return time;
-        }
-
-        playButton.addEventListener('click', () => {
-          const selectedSong = playButton.getAttribute('data-song');
-          const customMelody = playButton.getAttribute('data-custom-melody');
-          
-          if (isPlaying) {
-            if (currentAudio) {
-              currentAudio.pause();
-            }
-            playButton.innerHTML = '<i class="fas fa-play mr-2"></i>Play';
-            isPlaying = false;
-          } else {
-            let duration;
-            if (selectedSong && melodies[selectedSong]) {
-              duration = playMelody(melodies[selectedSong]);
-            } else if (customMelody) {
-              duration = playMelody(customMelody);
-            } else {
-              alert("No song selected. Please configure the Music Box.");
-              return;
-            }
-            playButton.innerHTML = '<i class="fas fa-stop mr-2"></i>Stop';
-            isPlaying = true;
-            
-            setTimeout(() => {
-              playButton.innerHTML = '<i class="fas fa-play mr-2"></i>Play';
-              isPlaying = false;
-            }, duration * 1000);
-          }
-        });
-      })();
-    </script>
   `,
     category: "Media Elements",
     minWidth: "200px",
@@ -1190,7 +1140,7 @@ const elementConfigs = {
               const musicBox = element.querySelector(".music-box");
               const playButton = element.querySelector(".play-button-trigger");
               musicBox.className = `music-box w-full h-full rounded-lg shadow-lg flex flex-col items-center justify-center p-4 ${style.classes}`;
-              playButton.className = `play-button ${style.classes.includes("text-neon-green") ? "text-neon-green" : "text-inherit"} bg-opacity-50 hover:bg-opacity-75 font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-105`;
+              playButton.className = `play-button-trigger play-button ${style.classes.includes("text-neon-green") ? "text-neon-green" : "text-inherit"} bg-opacity-50 hover:bg-opacity-75 font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-105`;
               element.setAttribute("data-style", style.name);
             };
             container.appendChild(button);
@@ -1216,23 +1166,25 @@ const elementConfigs = {
       const songTitle = element.querySelector(".song-title");
       const musicBox = element.querySelector(".music-box");
 
-      if (properties.song) {
+      if (playButton && properties.song) {
         playButton.setAttribute("data-song", properties.song);
-        songTitle.textContent =
-          properties.song.charAt(0).toUpperCase() +
-          properties.song
-            .slice(1)
-            .replace(/([A-Z])/g, " $1")
-            .trim() +
-          " Theme";
+        if (songTitle) {
+          songTitle.textContent =
+            properties.song.charAt(0).toUpperCase() +
+            properties.song
+              .slice(1)
+              .replace(/([A-Z])/g, " $1")
+              .trim() +
+            " Theme";
+        }
       }
-      if (properties.customMelody) {
+      if (playButton && properties.customMelody) {
         playButton.setAttribute("data-custom-melody", properties.customMelody);
       }
-      if (properties.customTitle) {
+      if (songTitle && properties.customTitle) {
         songTitle.textContent = properties.customTitle;
       }
-      if (properties.style) {
+      if (musicBox && playButton && properties.style) {
         const styles = {
           Classic:
             "bg-gradient-to-br from-amber-200 to-yellow-400 text-amber-800",
@@ -1241,11 +1193,12 @@ const elementConfigs = {
           Minimalist: "bg-gray-100 text-gray-800 border border-gray-300",
           Futuristic: "bg-gradient-to-r from-blue-500 to-purple-600 text-white",
         };
-        const styleClasses = styles[properties.style];
+        const styleClasses = styles[properties.style] || styles.Classic;
         musicBox.className = `music-box w-full h-full rounded-lg shadow-lg flex flex-col items-center justify-center p-4 ${styleClasses}`;
-        playButton.className = `play-button ${styleClasses.includes("text-neon-green") ? "text-neon-green" : "text-inherit"} bg-opacity-50 hover:bg-opacity-75 font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-105`;
+        playButton.className = `play-button-trigger play-button ${styleClasses.includes("text-neon-green") ? "text-neon-green" : "text-inherit"} bg-opacity-50 hover:bg-opacity-75 font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-105`;
         element.setAttribute("data-style", properties.style);
       }
+      bindMusicBox(element);
     },
   },
   Header: {
@@ -1345,7 +1298,7 @@ const elementConfigs = {
     configOptions: [
       {
         name: "openaiApiKey",
-        type: "text",
+        type: "password",
         label: "OpenAI API Key",
         helpText: "How to get an API Key",
         helpLink: "https://platform.openai.com/account/api-keys",
@@ -1365,24 +1318,23 @@ const elementConfigs = {
     ],
     getProperties: (element) => ({
       imageUrl: element.querySelector("img")?.src || "",
-      openaiApiKey: element.getAttribute("data-openai-api-key") || "",
+      imagePrompt: element.getAttribute("data-image-prompt") || "",
     }),
     setProperties: (element, properties) => {
       const container = element.querySelector("div") || element;
+      if (properties.imagePrompt) {
+        element.setAttribute("data-image-prompt", properties.imagePrompt);
+      }
       if (properties.imageUrl) {
-        // Create or update the img element
         let img = container.querySelector("img");
         if (!img) {
           img = document.createElement("img");
           img.className = "w-full h-full object-cover pointer-events-none";
-          container.innerHTML = ""; // Clear the placeholder content
+          container.innerHTML = "";
           container.appendChild(img);
         }
         img.src = properties.imageUrl;
-        img.alt = "AI Generated Image";
-      }
-      if (properties.openaiApiKey) {
-        element.setAttribute("data-openai-api-key", properties.openaiApiKey);
+        img.alt = properties.imagePrompt || "AI Generated Image";
       }
     },
     onGenerate: async (prompt, apiKey, updateAiImage) => {
@@ -1396,25 +1348,40 @@ const elementConfigs = {
               Authorization: `Bearer ${apiKey}`,
             },
             body: JSON.stringify({
-              prompt: prompt,
+              model: "gpt-image-2",
+              prompt,
               n: 1,
-              size: "512x512",
+              size: "1024x1024",
+              quality: "low",
+              output_format: "jpeg",
+              output_compression: 40,
+              moderation: "low",
+              background: "opaque",
             }),
           }
         );
         const data = await response.json();
-        if (data.data && data.data[0] && data.data[0].url) {
-          updateAiImage(data.data[0].url);
-        } else {
-          console.error("Failed to generate image:", data);
-          alert(
-            "Failed to generate image. Please check your API key and try again."
-          );
+        const image = data.data && data.data[0];
+        if (image?.b64_json) {
+          updateAiImage(`data:image/jpeg;base64,${image.b64_json}`);
+          return;
         }
+        if (image?.url) {
+          updateAiImage(image.url);
+          return;
+        }
+        const apiMessage =
+          data.error?.message ||
+          data.error?.code ||
+          `HTTP ${response.status}`;
+        console.error("Failed to generate image:", data);
+        alert(`Failed to generate image: ${apiMessage}`);
       } catch (error) {
         console.error("Error generating image:", error);
         alert(
-          "An error occurred while generating the image. Please try again."
+          error instanceof Error
+            ? `An error occurred while generating the image: ${error.message}`
+            : "An error occurred while generating the image. Please try again."
         );
       }
     },
@@ -1462,7 +1429,7 @@ const elementConfigs = {
   "Website Loader": {
     innerHTML: `
       <div class="website-container w-full h-full relative">
-        <iframe class="w-full h-full" src="" frameborder="0"></iframe>
+        <iframe class="w-full h-full" src="" sandbox="${IFRAME_SANDBOX}" referrerpolicy="no-referrer"></iframe>
         <div class="placeholder absolute inset-0 flex items-center justify-center bg-gradient-to-br from-teal-400 via-purple-500 to-orange-500 text-white">
           <span class="text-xl font-semibold">Enter a website URL to load</span>
         </div>
@@ -1480,10 +1447,15 @@ const elementConfigs = {
       websiteUrl: element.querySelector("iframe").src,
     }),
     setProperties: (element, properties) => {
-      if (properties.websiteUrl) {
-        element.querySelector("iframe").src = properties.websiteUrl;
+      const iframe = element.querySelector("iframe");
+      iframe.setAttribute("sandbox", IFRAME_SANDBOX);
+      iframe.setAttribute("referrerpolicy", "no-referrer");
+      const safeUrl = toSafeHttpUrl(properties.websiteUrl);
+      if (safeUrl) {
+        iframe.src = safeUrl;
         element.querySelector(".placeholder").style.display = "none";
       } else {
+        iframe.src = "";
         element.querySelector(".placeholder").style.display = "flex";
       }
     },
@@ -1553,17 +1525,11 @@ const elementConfigs = {
               const emojiDisplay = element.querySelector(".emoji-display");
               if (emojiDisplay) {
                 emojiDisplay.textContent = emoji.native;
-                // Close the config window
-                const configModal =
-                  document.getElementById("elementConfigModal");
-                if (configModal) {
-                  configModal.classList.add("hidden");
-                }
-                // Trigger a custom event to notify that the element has been updated
-                const event = new CustomEvent("elementUpdated", {
-                  detail: { element },
-                });
-                document.dispatchEvent(event);
+                document.dispatchEvent(
+                  new CustomEvent("elementUpdated", {
+                    detail: { element },
+                  })
+                );
               }
             },
             theme: "light",

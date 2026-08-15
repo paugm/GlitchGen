@@ -2,6 +2,49 @@ import DOMPurify from "dompurify";
 import { Picker } from "emoji-mart";
 export const version_elements = "1.7";
 
+/**
+ * Extracts a YouTube video ID from watch, share, shorts, live, and embed URLs.
+ * Strips extra query params so links like watch?v=ID&t=30s still embed.
+ * @param {string} url
+ * @returns {string|null}
+ */
+function extractYouTubeId(url) {
+  if (!url || typeof url !== "string") return null;
+  const trimmed = url.trim();
+  try {
+    const parsed = new URL(
+      trimmed.includes("://") ? trimmed : `https://${trimmed}`
+    );
+    const host = parsed.hostname.replace(/^www\./, "");
+    if (host === "youtu.be") {
+      return parsed.pathname.split("/").filter(Boolean)[0] || null;
+    }
+    if (
+      host === "youtube.com" ||
+      host === "m.youtube.com" ||
+      host === "music.youtube.com" ||
+      host === "youtube-nocookie.com"
+    ) {
+      const fromQuery = parsed.searchParams.get("v");
+      if (fromQuery) return fromQuery;
+      const parts = parsed.pathname.split("/").filter(Boolean);
+      const prefix = parts.findIndex(
+        (segment) =>
+          segment === "embed" ||
+          segment === "shorts" ||
+          segment === "live" ||
+          segment === "v"
+      );
+      if (prefix !== -1 && parts[prefix + 1]) {
+        return parts[prefix + 1];
+      }
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
 const elementConfigs = {
   "Upload Image": {
     innerHTML: `
@@ -1402,14 +1445,9 @@ const elementConfigs = {
     setProperties: (element, properties) => {
       if (properties.videoUrl) {
         let embedUrl = properties.videoUrl;
-        if (
-          properties.videoUrl.includes("youtube.com") ||
-          properties.videoUrl.includes("youtu.be")
-        ) {
-          const videoId =
-            properties.videoUrl.split("v=")[1] ||
-            properties.videoUrl.split("/").pop();
-          embedUrl = `https://www.youtube.com/embed/${videoId}`;
+        const youtubeId = extractYouTubeId(properties.videoUrl);
+        if (youtubeId) {
+          embedUrl = `https://www.youtube.com/embed/${youtubeId}`;
         } else if (properties.videoUrl.includes("vimeo.com")) {
           const videoId = properties.videoUrl.split("/").pop();
           embedUrl = `https://player.vimeo.com/video/${videoId}`;

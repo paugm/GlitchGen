@@ -1,8 +1,10 @@
 import { gsap } from "gsap";
+import { del, get, set } from "idb-keyval";
 import elementConfigs from "./elements";
 import { DragDropManager } from "./dragDropManager";
 
 const version = "0.4.1";
+const DRAFT_KEY = "glitchgen-draft";
 
 document.addEventListener("DOMContentLoaded", (event) => {
   document.getElementById("versionNumber").textContent = `v${version}`;
@@ -65,6 +67,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
   let historyStack = [];
   let historyPointer = -1;
   let isRestoringState = false; // flag to prevent capturing state during undo/redo restore
+  let autosaveReady = false;
 
   /**
    * Captures the current canvas state as a serializable snapshot.
@@ -113,6 +116,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
     }
     historyPointer = historyStack.length - 1;
     updateUndoRedoButtons();
+    persistDraft();
   }
 
   /**
@@ -155,8 +159,8 @@ document.addEventListener("DOMContentLoaded", (event) => {
     });
 
     togglePlaceholder();
-    dragDropManager.initializeExistingElements();
     isRestoringState = false;
+    persistDraft();
   }
 
   /**
@@ -220,19 +224,22 @@ document.addEventListener("DOMContentLoaded", (event) => {
    */
   window.createNewWebsite = function (template) {
     if (template === "blank") {
-      // Clear current app
-      while (dropZone.firstChild) {
-        dropZone.removeChild(dropZone.firstChild);
-      }
-      // Reset to default settings
+      clearCanvasElements();
       webTitle.textContent = "Your Website";
       GRID_SIZE = 20;
+      dragDropManager.gridSize = GRID_SIZE;
       document.getElementById("fontSelect").value = "Roboto";
       document.getElementById("textColorInput").value = "#000000";
-      dropZone.style.backgroundImage = "none";
+      dropZone.style.backgroundImage = "";
       updateTextColor("#000000");
       updateFont("Roboto");
+      historyStack = [];
+      historyPointer = -1;
+      hasUnsavedChanges = false;
       modalSystem.closeModal();
+      togglePlaceholder();
+      del(DRAFT_KEY).catch((err) => console.error("Error clearing draft:", err));
+      pushState();
     } else {
       if (isRunningLocalServer()) {
         // Load template
@@ -731,6 +738,109 @@ document.addEventListener("DOMContentLoaded", (event) => {
     dropZone.dispatchEvent(event);
   }
   /**
+   * Removes placed elements without deleting the empty-canvas placeholder.
+   */
+  function clearCanvasElements() {
+    const dz = document.getElementById("drop-zone");
+    if (!dz) return;
+    dz.querySelectorAll(".draggable-element").forEach((el) => el.remove());
+  }
+
+  /**
+   * Collects the current website into the .glitchGen save format.
+   * @returns {Object|null}
+   */
+  function collectAppData() {
+    const dz = document.getElementById("drop-zone");
+    if (!dz) return null;
+    const elements = Array.from(dz.querySelectorAll(".draggable-element"));
+    elements.sort(
+      (a, b) =>
+        (parseInt(a.style.zIndex) || 0) - (parseInt(b.style.zIndex) || 0)
+    );
+    return {
+      version,
+      title: webTitle?.textContent || "",
+      gridSize: GRID_SIZE,
+      font: document.getElementById("fontSelect")?.value || "Roboto",
+      textColor: document.getElementById("textColorInput")?.value || "#000000",
+      dropZoneWidth: dz.offsetWidth,
+      dropZoneHeight: dz.offsetHeight,
+      background: dz.style.backgroundImage || "",
+      elements: elements.map((element, index) => {
+        const elementType = element.getAttribute("data-element-type");
+        const config = elementConfigs[elementType];
+        return {
+          id: element.id,
+          type: elementType,
+          left: parseFloat(element.style.left),
+          top: parseFloat(element.style.top),
+          width: parseFloat(element.style.width),
+          height: parseFloat(element.style.height),
+          layerOrder: index,
+          zIndex: element.style.zIndex,
+          properties: config ? config.getProperties(element) : {},
+        };
+      }),
+    };
+  }
+
+  /**
+   * True when a draft has elements or a real background (not "none").
+   * @param {Object|null} appData
+   * @returns {boolean}
+   */
+  function hasMeaningfulDraft(appData) {
+    if (!appData) return false;
+    const bg = appData.background;
+    const hasBackground = Boolean(bg) && bg !== "none";
+    return (
+      (Array.isArray(appData.elements) && appData.elements.length > 0) ||
+      hasBackground
+    );
+  }
+
+  /**
+   * Writes or clears the IndexedDB draft from the current canvas.
+   */
+  function persistDraft() {
+    if (!autosaveReady || isRestoringState || !hasUnsavedChanges) return;
+    const appData = collectAppData();
+    if (!appData) return;
+    const write = hasMeaningfulDraft(appData)
+      ? set(DRAFT_KEY, appData)
+      : del(DRAFT_KEY);
+    write.catch((err) => console.error("Error saving draft:", err));
+  }
+
+  /**
+   * On startup, offer to restore the last unsaved draft.
+   */
+  async function restoreDraftIfPresent() {
+    try {
+      const draft = await get(DRAFT_KEY);
+      if (hasMeaningfulDraft(draft)) {
+        const shouldRestore = window.confirm(
+          "Restore your last unsaved website?"
+        );
+        if (shouldRestore) {
+          loadWebData(draft, { keepDraft: true });
+          hasUnsavedChanges = true;
+        } else {
+          await del(DRAFT_KEY);
+        }
+      }
+    } catch (err) {
+      console.error("Error restoring draft:", err);
+    } finally {
+      autosaveReady = true;
+      if (historyPointer < 0) {
+        pushState();
+      }
+    }
+  }
+
+  /**
    * Saves the current application state to a file.
    * This function collects all the necessary data about the current application,
    * including the version, title, grid size, font, text color, drop zone dimensions,
@@ -738,42 +848,8 @@ document.addEventListener("DOMContentLoaded", (event) => {
    * JSON file with this data and triggers a download.
    */
   function saveCurrentApp() {
-    const appData = {
-      version: version,
-      title: webTitle.textContent,
-      gridSize: GRID_SIZE,
-      font: document.getElementById("fontSelect").value,
-      textColor: document.getElementById("textColorInput").value,
-      dropZoneWidth: dropZone.offsetWidth,
-      dropZoneHeight: dropZone.offsetHeight,
-      background: dropZone.style.backgroundImage,
-      elements: [],
-    };
-
-    const elements = Array.from(
-      dropZone.querySelectorAll(".draggable-element")
-    );
-    elements.sort(
-      (a, b) =>
-        (parseInt(a.style.zIndex) || 0) - (parseInt(b.style.zIndex) || 0)
-    );
-
-    elements.forEach((element, index) => {
-      const elementType = element.getAttribute("data-element-type");
-      const config = elementConfigs[elementType];
-
-      appData.elements.push({
-        id: element.id,
-        type: elementType,
-        left: parseFloat(element.style.left),
-        top: parseFloat(element.style.top),
-        width: parseFloat(element.style.width),
-        height: parseFloat(element.style.height),
-        layerOrder: index,
-        zIndex: element.style.zIndex,
-        properties: config.getProperties(element),
-      });
-    });
+    const appData = collectAppData();
+    if (!appData) return;
 
     const blob = new Blob([JSON.stringify(appData, null, 2)], {
       type: "application/json",
@@ -787,6 +863,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     hasUnsavedChanges = false;
+    del(DRAFT_KEY).catch((err) => console.error("Error clearing draft:", err));
   }
 
   /**
@@ -1668,18 +1745,16 @@ document.addEventListener("DOMContentLoaded", (event) => {
    * Loads web data from the provided app data object.
    * @param {Object} appData - The app data object containing web configuration and elements.
    */
-  function loadWebData(appData) {
+  function loadWebData(appData, options = {}) {
     highestZIndex = 1000;
-    // Clear current app
-    while (dropZone.firstChild) {
-      dropZone.removeChild(dropZone.firstChild);
-    }
+    clearCanvasElements();
 
     // Set web configuration
-    webTitle.textContent = appData.title;
-    GRID_SIZE = appData.gridSize;
-    document.getElementById("fontSelect").value = appData.font;
-    document.getElementById("textColorInput").value = appData.textColor;
+    webTitle.textContent = appData.title || "Your Website";
+    GRID_SIZE = appData.gridSize || 20;
+    document.getElementById("fontSelect").value = appData.font || "Roboto";
+    document.getElementById("textColorInput").value =
+      appData.textColor || "#000000";
 
     // Set initial drop zone size
     dropZoneInitialWidth = appData.dropZoneWidth || dropZone.offsetWidth;
@@ -1690,19 +1765,23 @@ document.addEventListener("DOMContentLoaded", (event) => {
     const heightRatio = dropZone.offsetHeight / dropZoneInitialHeight;
 
     // Set background
-    if (appData.background) {
-      dropZone.style.backgroundImage = appData.background;
-    }
+    dropZone.style.backgroundImage =
+      appData.background && appData.background !== "none"
+        ? appData.background
+        : "";
 
     // Set text color
-    updateTextColor(appData.textColor);
+    updateTextColor(appData.textColor || "#000000");
 
     // Update DragDropManager with new grid size
     dragDropManager.gridSize = GRID_SIZE;
 
     // Load elements
-    appData.elements.sort((a, b) => a.layerOrder - b.layerOrder);
-    appData.elements.forEach((elementData, index) => {
+    const elementsToLoad = Array.isArray(appData.elements)
+      ? appData.elements
+      : [];
+    elementsToLoad.sort((a, b) => a.layerOrder - b.layerOrder);
+    elementsToLoad.forEach((elementData, index) => {
       try {
         const config = elementConfigs[elementData.type];
         if (!config) {
@@ -1769,13 +1848,13 @@ document.addEventListener("DOMContentLoaded", (event) => {
     togglePlaceholder();
     hasUnsavedChanges = false;
 
-    // Re-initialize drag functionality for all elements
-    dragDropManager.initializeExistingElements();
-
     // Reset undo history and capture initial loaded state
     historyStack = [];
     historyPointer = -1;
     pushState();
+    if (!options.keepDraft) {
+      del(DRAFT_KEY).catch((err) => console.error("Error clearing draft:", err));
+    }
   }
 
   /**
@@ -1914,7 +1993,10 @@ document.addEventListener("DOMContentLoaded", (event) => {
       return; // Exit the function if drop zone is not found
     }
 
-    if (dropZone.children.length > 1 || dropZone.style.backgroundImage) {
+    const background = dropZone.style.backgroundImage;
+    const hasBackground = Boolean(background) && background !== "none";
+    const hasElements = dropZone.querySelector(".draggable-element");
+    if (hasElements || hasBackground) {
       placeholder.style.display = "none";
     } else {
       placeholder.style.display = "flex";
@@ -2261,6 +2343,5 @@ document.addEventListener("DOMContentLoaded", (event) => {
   }
   // ── End Template Gallery ────────────────────────────────────────────────
 
-  // Capture initial empty state for undo
-  pushState();
+  restoreDraftIfPresent();
 });

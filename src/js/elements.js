@@ -90,17 +90,17 @@ const elementConfigs = {
     innerHTML: `
     <div class="relative w-full h-full overflow-hidden bg-gray-100 flex items-center justify-center">
       <img src="" alt="Uploaded image" class="w-full h-full object-cover">
-      <div class="absolute inset-0 flex items-center justify-center bg-gradient-to-r from-purple-500 via-pink-500 to-yellow-500 text-white text-center p-4 no-image-text overflow-hidden">
+      <div class="absolute inset-0 flex items-center justify-center bg-linear-to-r from-purple-500 via-pink-500 to-yellow-500 text-white text-center p-4 no-image-text overflow-hidden">
       <div class="absolute inset-0 bg-yellow-300 opacity-30"></div>
       <div class="absolute inset-0 bg-blue-500 mix-blend-overlay filter blur-xl"></div>
-      <div class="absolute inset-0 bg-gradient-to-t from-transparent to-white opacity-20"></div>
+      <div class="absolute inset-0 bg-linear-to-t from-transparent to-white opacity-20"></div>
       <div class="z-10 text-white font-bold  tracking-widest transform -rotate-2 flex flex-col items-center">
         <span class="inline-block transform hover:scale-110 transition-transform duration-300 glitch-text text-3xl ">Image Upload</span>
         <span class="inline-block transform hover:scale-110 transition-transform duration-300 glitch-text text-sm">Click here to search</span>
       </div>
-      <div class="absolute -bottom-4 -left-4 w-32 h-32 bg-gradient-to-br from-yellow-300 to-pink-500 rounded-full filter blur-xl opacity-75 "></div>
-      <div class="absolute -top-4 -right-4 w-32 h-32 bg-gradient-to-br from-purple-300 to-cyan-500 rounded-full filter blur-xl opacity-75 "></div>
-      <div class="absolute bottom-1/2 left-1/2 w-32 h-32 bg-gradient-to-br from-pink-300 to-yellow-500 rounded-full filter blur-xl opacity-75 "></div>
+      <div class="absolute -bottom-4 -left-4 w-32 h-32 bg-linear-to-br from-yellow-300 to-pink-500 rounded-full filter blur-xl opacity-75 "></div>
+      <div class="absolute -top-4 -right-4 w-32 h-32 bg-linear-to-br from-purple-300 to-cyan-500 rounded-full filter blur-xl opacity-75 "></div>
+      <div class="absolute bottom-1/2 left-1/2 w-32 h-32 bg-linear-to-br from-pink-300 to-yellow-500 rounded-full filter blur-xl opacity-75 "></div>
     </div>
   `,
     category: "Media Elements",
@@ -153,8 +153,8 @@ const elementConfigs = {
     <div class="web-ring w-full h-full flex flex-col items-center justify-center">
       <h3 class="web-ring-title text-lg font-bold mb-2">Web Ring</h3>
       <div class="flex space-x-4">
-        <a href="#" class="web-ring-prev px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">Previous</a>
-        <a href="#" class="web-ring-next px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">Next</a>
+        <a href="#" class="web-ring-prev px-4 py-2 bg-blue-500 text-white rounded-sm hover:bg-blue-600 transition-colors">Previous</a>
+        <a href="#" class="web-ring-next px-4 py-2 bg-blue-500 text-white rounded-sm hover:bg-blue-600 transition-colors">Next</a>
       </div>
     </div>
   `,
@@ -211,14 +211,14 @@ const elementConfigs = {
             {
               name: "Elegant",
               class:
-                "bg-gradient-to-r from-purple-500 to-pink-500 text-white border border-white hover:from-pink-500 hover:to-purple-500",
+                "bg-linear-to-r from-purple-500 to-pink-500 text-white border border-white hover:from-pink-500 hover:to-purple-500",
               titleClass: "text-purple-500",
             },
           ];
 
           styles.forEach((style) => {
             const button = document.createElement("button");
-            button.className = `w-full p-2 ${style.class} rounded transition-colors duration-200`;
+            button.className = `w-full p-2 ${style.class} rounded-sm transition-colors duration-200`;
             button.textContent = style.name;
             button.onclick = () => {
               const webRing = element.querySelector(".web-ring");
@@ -227,8 +227,8 @@ const elementConfigs = {
               const nextButton = webRing.querySelector(".web-ring-next");
 
               title.className = `web-ring-title text-lg font-bold mb-2 ${style.titleClass}`;
-              prevButton.className = `web-ring-prev px-4 py-2 rounded transition-colors ${style.class}`;
-              nextButton.className = `web-ring-next px-4 py-2 rounded transition-colors ${style.class}`;
+              prevButton.className = `web-ring-prev px-4 py-2 rounded-sm transition-colors ${style.class}`;
+              nextButton.className = `web-ring-next px-4 py-2 rounded-sm transition-colors ${style.class}`;
 
               element.setAttribute("data-style", style.name);
             };
@@ -285,15 +285,15 @@ const elementConfigs = {
           },
           Elegant: {
             button:
-              "bg-gradient-to-r from-purple-500 to-pink-500 text-white border border-white hover:from-pink-500 hover:to-purple-500",
+              "bg-linear-to-r from-purple-500 to-pink-500 text-white border border-white hover:from-pink-500 hover:to-purple-500",
             title: "text-white",
           },
         };
 
         const style = styles[properties.style] || styles.Classic;
         title.className = `web-ring-title text-lg font-bold mb-2 ${style.title}`;
-        prevButton.className = `web-ring-prev px-4 py-2 rounded transition-colors ${style.button}`;
-        nextButton.className = `web-ring-next px-4 py-2 rounded transition-colors ${style.button}`;
+        prevButton.className = `web-ring-prev px-4 py-2 rounded-sm transition-colors ${style.button}`;
+        nextButton.className = `web-ring-next px-4 py-2 rounded-sm transition-colors ${style.button}`;
         element.setAttribute("data-style", properties.style);
       }
     },
@@ -458,7 +458,7 @@ const elementConfigs = {
         <div class="header bg-blue-500 p-4">
           <h3 class="font-bold text-xl text-white">Exciting News!</h3>
         </div>
-        <div class="content p-6 flex-grow">
+        <div class="content p-6 grow">
           <p class="text-gray-700 leading-relaxed">We're thrilled to announce our latest feature that will revolutionize your workflow. Stay tuned for more updates!</p>
         </div>
       </div>
@@ -490,10 +490,10 @@ const elementConfigs = {
 
           const stylePreview = {
             default: "bg-white shadow-lg rounded-lg",
-            minimal: "bg-gray-100 border border-gray-300 rounded",
+            minimal: "bg-gray-100 border border-gray-300 rounded-sm",
             dark: "bg-gray-800 text-white rounded-lg",
             colorful:
-              "bg-gradient-to-br from-pink-400 via-purple-400 to-indigo-400 text-white rounded-lg",
+              "bg-linear-to-br from-pink-400 via-purple-400 to-indigo-400 text-white rounded-lg",
           };
 
           styles.forEach((style) => {
@@ -535,10 +535,10 @@ const elementConfigs = {
         const card = element.querySelector(".info-card");
         const stylePreview = {
           default: "bg-white shadow-lg rounded-lg",
-          minimal: "bg-gray-100 border border-gray-300 rounded",
+          minimal: "bg-gray-100 border border-gray-300 rounded-sm",
           dark: "bg-gray-800 text-white rounded-lg",
           colorful:
-            "bg-gradient-to-br from-pink-400 via-purple-400 to-indigo-400 text-white rounded-lg",
+            "bg-linear-to-br from-pink-400 via-purple-400 to-indigo-400 text-white rounded-lg",
         };
         card.className = `info-card ${stylePreview[properties.style]} overflow-hidden pointer-events-none w-full h-full flex flex-col`;
         card.setAttribute("data-style", properties.style);
@@ -592,7 +592,7 @@ const elementConfigs = {
 
           styles.forEach((style) => {
             const button = document.createElement("button");
-            button.className = "w-full p-2 border rounded";
+            button.className = "w-full p-2 border rounded-sm";
             button.textContent = style.name;
             button.style =
               elementConfigs["HTML Block"].elementStyles[style.value];
@@ -636,17 +636,17 @@ const elementConfigs = {
   "Image Web Search": {
     innerHTML: `
 
-    <div class="relative w-full h-full overflow-hidden bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 flex items-center justify-center">
+    <div class="relative w-full h-full overflow-hidden bg-linear-to-br from-purple-500 via-pink-500 to-red-500 flex items-center justify-center">
       <div class="absolute inset-0 bg-yellow-300 opacity-30"></div>
       <div class="absolute inset-0 bg-blue-500 mix-blend-overlay filter blur-xl"></div>
-      <div class="absolute inset-0 bg-gradient-to-t from-transparent to-white opacity-20"></div>
+      <div class="absolute inset-0 bg-linear-to-t from-transparent to-white opacity-20"></div>
       <div class="z-10 text-white font-bold  tracking-widest transform -rotate-2 flex flex-col items-center">
         <span class="inline-block transform hover:scale-110 transition-transform duration-300 glitch-text text-3xl ">Image</span>
         <span class="inline-block transform hover:scale-110 transition-transform duration-300 glitch-text text-sm">Click here to search</span>
       </div>
-      <div class="absolute -bottom-4 -left-4 w-32 h-32 bg-gradient-to-br from-yellow-300 to-pink-500 rounded-full filter blur-xl opacity-75 "></div>
-      <div class="absolute -top-4 -right-4 w-32 h-32 bg-gradient-to-br from-purple-300 to-cyan-500 rounded-full filter blur-xl opacity-75 "></div>
-      <div class="absolute bottom-1/2 left-1/2 w-32 h-32 bg-gradient-to-br from-pink-300 to-yellow-500 rounded-full filter blur-xl opacity-75 "></div>
+      <div class="absolute -bottom-4 -left-4 w-32 h-32 bg-linear-to-br from-yellow-300 to-pink-500 rounded-full filter blur-xl opacity-75 "></div>
+      <div class="absolute -top-4 -right-4 w-32 h-32 bg-linear-to-br from-purple-300 to-cyan-500 rounded-full filter blur-xl opacity-75 "></div>
+      <div class="absolute bottom-1/2 left-1/2 w-32 h-32 bg-linear-to-br from-pink-300 to-yellow-500 rounded-full filter blur-xl opacity-75 "></div>
     </div>
   `,
     category: "Media Elements",
@@ -1056,7 +1056,7 @@ const elementConfigs = {
   },
   "Music Box": {
     innerHTML: `
-    <div class="music-box w-full h-full rounded-lg shadow-lg flex flex-col items-center justify-center p-4 bg-gradient-to-br from-amber-200 to-yellow-400 text-amber-800">
+    <div class="music-box w-full h-full rounded-lg shadow-lg flex flex-col items-center justify-center p-4 bg-linear-to-br from-amber-200 to-yellow-400 text-amber-800">
       <h3 class="text-xl font-bold mb-2 song-title">Music Box!</h3>
       <button type="button" class="play-button-trigger play-button bg-opacity-50 hover:bg-opacity-75 font-bold py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-105" data-song="starwars">
         <i class="fas fa-play mr-2" aria-hidden="true"></i>Play
@@ -1110,7 +1110,7 @@ const elementConfigs = {
             {
               name: "Classic",
               classes:
-                "bg-gradient-to-br from-amber-200 to-yellow-400 text-amber-800",
+                "bg-linear-to-br from-amber-200 to-yellow-400 text-amber-800",
             },
             {
               name: "Neon",
@@ -1128,13 +1128,13 @@ const elementConfigs = {
             {
               name: "Futuristic",
               classes:
-                "bg-gradient-to-r from-blue-500 to-purple-600 text-white",
+                "bg-linear-to-r from-blue-500 to-purple-600 text-white",
             },
           ];
 
           styles.forEach((style) => {
             const button = document.createElement("button");
-            button.className = `w-full p-2 rounded ${style.classes}`;
+            button.className = `w-full p-2 rounded-sm ${style.classes}`;
             button.textContent = style.name;
             button.onclick = () => {
               const musicBox = element.querySelector(".music-box");
@@ -1187,11 +1187,11 @@ const elementConfigs = {
       if (musicBox && playButton && properties.style) {
         const styles = {
           Classic:
-            "bg-gradient-to-br from-amber-200 to-yellow-400 text-amber-800",
+            "bg-linear-to-br from-amber-200 to-yellow-400 text-amber-800",
           Neon: "bg-black text-neon-green border-2 border-neon-green",
           Retro: "bg-purple-700 text-yellow-300 border-2 border-yellow-300",
           Minimalist: "bg-gray-100 text-gray-800 border border-gray-300",
-          Futuristic: "bg-gradient-to-r from-blue-500 to-purple-600 text-white",
+          Futuristic: "bg-linear-to-r from-blue-500 to-purple-600 text-white",
         };
         const styleClasses = styles[properties.style] || styles.Classic;
         musicBox.className = `music-box w-full h-full rounded-lg shadow-lg flex flex-col items-center justify-center p-4 ${styleClasses}`;
@@ -1275,17 +1275,17 @@ const elementConfigs = {
   },
   "AI Image": {
     innerHTML: `
-    <div class="relative w-full h-full overflow-hidden bg-gradient-to-br from-cyan-400 via-purple-500 to-pink-500 flex items-center justify-center">
+    <div class="relative w-full h-full overflow-hidden bg-linear-to-br from-cyan-400 via-purple-500 to-pink-500 flex items-center justify-center">
       <div class="absolute inset-0 bg-yellow-300 opacity-30"></div>
       <div class="absolute inset-0 bg-blue-500 mix-blend-overlay filter blur-xl"></div>
-      <div class="absolute inset-0 bg-gradient-to-t from-transparent to-white opacity-20"></div>
+      <div class="absolute inset-0 bg-linear-to-t from-transparent to-white opacity-20"></div>
       <div class="z-10 text-white font-bold  tracking-widest transform -rotate-2 flex flex-col items-center">
         <span class="inline-block transform hover:scale-110 transition-transform duration-300 glitch-text text-3xl ">AI Image</span>
         <span class="inline-block transform hover:scale-110 transition-transform duration-300 glitch-text text-sm">Click here to generate</span>
       </div>
-      <div class="absolute -bottom-4 -left-4 w-32 h-32 bg-gradient-to-br from-yellow-300 to-pink-500 rounded-full filter blur-xl opacity-75 "></div>
-      <div class="absolute -top-4 -right-4 w-32 h-32 bg-gradient-to-br from-purple-300 to-cyan-500 rounded-full filter blur-xl opacity-75 "></div>
-      <div class="absolute bottom-1/2 left-1/2 w-32 h-32 bg-gradient-to-br from-pink-300 to-yellow-500 rounded-full filter blur-xl opacity-75 "></div>
+      <div class="absolute -bottom-4 -left-4 w-32 h-32 bg-linear-to-br from-yellow-300 to-pink-500 rounded-full filter blur-xl opacity-75 "></div>
+      <div class="absolute -top-4 -right-4 w-32 h-32 bg-linear-to-br from-purple-300 to-cyan-500 rounded-full filter blur-xl opacity-75 "></div>
+      <div class="absolute bottom-1/2 left-1/2 w-32 h-32 bg-linear-to-br from-pink-300 to-yellow-500 rounded-full filter blur-xl opacity-75 "></div>
     </div>
   `,
     category: "Media Elements",
@@ -1391,7 +1391,7 @@ const elementConfigs = {
     innerHTML: `
       <div class="video-container w-full h-full relative">
         <iframe class="w-full h-full" src="" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-        <div class="placeholder absolute inset-0 flex items-center justify-center bg-gradient-to-br from-purple-500 via-pink-500 to-yellow-500">
+        <div class="placeholder absolute inset-0 flex items-center justify-center bg-linear-to-br from-purple-500 via-pink-500 to-yellow-500">
           <span class="text-white text-xl font-bold">Enter a video URL</span>
         </div>
       </div>
@@ -1430,7 +1430,7 @@ const elementConfigs = {
     innerHTML: `
       <div class="website-container w-full h-full relative">
         <iframe class="w-full h-full" src="" sandbox="${IFRAME_SANDBOX}" referrerpolicy="no-referrer"></iframe>
-        <div class="placeholder absolute inset-0 flex items-center justify-center bg-gradient-to-br from-teal-400 via-purple-500 to-orange-500 text-white">
+        <div class="placeholder absolute inset-0 flex items-center justify-center bg-linear-to-br from-teal-400 via-purple-500 to-orange-500 text-white">
           <span class="text-xl font-semibold">Enter a website URL to load</span>
         </div>
       </div>
@@ -1462,7 +1462,7 @@ const elementConfigs = {
   },
   "Weather Widget": {
     innerHTML: `
-      <div class="weather-widget w-full h-full p-4 bg-gradient-to-br from-blue-400 to-blue-600 text-white rounded-lg">
+      <div class="weather-widget w-full h-full p-4 bg-linear-to-br from-blue-400 to-blue-600 text-white rounded-lg">
         <div class="placeholder flex items-center justify-center h-full">
           <span class="text-xl font-semibold">Enter a location to load weather data</span>
         </div>

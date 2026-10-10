@@ -985,7 +985,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
         const li = document.createElement("li");
         li.innerHTML = `
           <i class="mt-1 fas fa-${config.icon}" aria-hidden="true"></i>
-          <span class="flex-grow">${elementType}</span>
+          <span class="grow">${elementType}</span>
         `;
         li.setAttribute("draggable", "true");
         li.setAttribute("role", "button");
@@ -1248,7 +1248,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
 
     const preview = document.createElement("div");
     preview.className =
-      "drag-preview fixed pointer-events-none z-[100000] opacity-70 draggable-element p-2 bg-white shadow rounded overflow-hidden";
+      "drag-preview fixed pointer-events-none z-100000 opacity-70 draggable-element p-2 bg-white shadow-sm rounded-sm overflow-hidden";
     preview.style.width = config.width || config.minWidth;
     preview.style.height = config.height || config.minHeight;
     preview.style.left = "-9999px";
@@ -1409,7 +1409,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
         input.name = option.name;
         input.accept = "image/*";
         input.className =
-          "mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm";
+          "mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-xs focus:outline-hidden focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm";
         // Add event listener for image compression and preview
         input.addEventListener("change", async (event) => {
           const file = event.target.files[0];
@@ -1440,7 +1440,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
         input.id = option.name;
         input.name = option.name;
         input.className =
-          "mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md";
+          "mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-hidden focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md";
         option.options.forEach((optionValue) => {
           const optElement = document.createElement("option");
           optElement.value = optionValue.value || optionValue;
@@ -1453,14 +1453,14 @@ document.addEventListener("DOMContentLoaded", (event) => {
         input.type = "button";
         input.textContent = option.label;
         input.className =
-          "mt-2 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500";
+          "mt-2 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500";
       } else if (option.type === "textarea") {
         // Create textarea input
         input = document.createElement("textarea");
         input.id = option.name;
         input.name = option.name;
         input.className =
-          "mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm";
+          "mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-xs focus:outline-hidden focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm";
         input.rows = 5;
       } else {
         // Create default input element
@@ -1469,7 +1469,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
         input.id = option.name;
         input.name = option.name;
         input.className =
-          "mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm";
+          "mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-xs focus:outline-hidden focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm";
         if (option.name.endsWith("ApiKey")) {
           input.type = "password";
           input.autocomplete = "off";
@@ -1487,7 +1487,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
           const successMessage = document.createElement("input");
           successMessage.value = "API Key successfully stored. ";
           successMessage.className =
-            "mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-green-600";
+            "mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-xs focus:outline-hidden focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-green-600";
           successMessage.disabled = true;
           optionElement.appendChild(successMessage);
 
@@ -1667,7 +1667,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
     const successElement = document.createElement("div");
     successElement.innerHTML = `
       <p class="text-sm text-green-600 mt-1">API Key successfully stored.</p>
-      <button class="mt-2 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+      <button class="mt-2 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
         Remove ${apiKeyName.replace("ApiKey", " API Key")}
       </button>
     `;
@@ -1718,7 +1718,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
     const apiKeyElement = document.createElement("div");
     apiKeyElement.innerHTML = `
       <label for="${apiKeyName}" class="block text-sm font-medium text-gray-700">${apiKeyName.replace("ApiKey", " API Key")}</label>
-      <input type="password" id="${apiKeyName}" name="${apiKeyName}" autocomplete="off" spellcheck="false" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+      <input type="password" id="${apiKeyName}" name="${apiKeyName}" autocomplete="off" spellcheck="false" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-xs focus:outline-hidden focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
     `;
     apiKeyElement.querySelector("input").addEventListener(
       "input",
@@ -2290,8 +2290,8 @@ document.addEventListener("DOMContentLoaded", (event) => {
     wrapper.classList.add(
       "bg-white",
       "p-2",
-      "rounded",
-      "shadow",
+      "rounded-sm",
+      "shadow-sm",
       "inline-block",
       "overflow-hidden",
       "draggable-element"
@@ -2758,7 +2758,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
           card.innerHTML = `
             <div class="relative h-40 overflow-hidden bg-gray-100">
               <img src="./templates/${tpl.thumbnail}" alt="${tpl.name}" class="w-full h-full object-cover filter group-hover:filter-none transition-all duration-300 grayscale">
-              <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <div class="absolute inset-0 bg-linear-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </div>
             <div class="p-4">
               <h3 class="font-bold text-gray-800 text-lg">${tpl.name}</h3>
@@ -2767,7 +2767,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
               <div class="flex flex-wrap gap-1 mb-3">
                 ${tpl.tags.map((tag) => `<span class="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded-full">${tag}</span>`).join("")}
               </div>
-              <button class="use-template-btn w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-2 rounded-md text-sm font-medium hover:from-purple-600 hover:to-pink-600 transition-all duration-200">
+              <button class="use-template-btn w-full bg-linear-to-r from-purple-500 to-pink-500 text-white py-2 rounded-md text-sm font-medium hover:from-purple-600 hover:to-pink-600 transition-all duration-200">
                 Use Template
               </button>
             </div>

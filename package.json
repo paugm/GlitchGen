@@ -20,7 +20,7 @@
     "@tailwindcss/cli": "^4.3.3",
     "@tailwindcss/postcss": "^4.3.3",
     "css-loader": "^7.1.5",
-    "postcss": "^8.5.31",
+    "postcss": "^8.5.32",
     "prettier": "^3.9.10",
     "style-loader": "^4.0.0",
     "tailwindcss": "^4.3.3",

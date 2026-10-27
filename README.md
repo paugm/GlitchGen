@@ -41,7 +41,7 @@ By following these steps, you can easily run GlitchGen on your local machine wit
 
 ## 🛠️ Local Installation and Expansion (Technical Approach)
 
-To set up GlitchGen locally:
+To set up GlitchGen locally, use Node.js 20.9 or newer:
 
 1. Clone the repository:
    ```
